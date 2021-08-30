@@ -5,6 +5,7 @@
 #include <cstrike>
 #include <engine>
 #include <fun>
+#include <reapi>
 
 #define DEBUG(%1) client_print(%1)
 
@@ -100,7 +101,7 @@ new const WEAPONBOX[] =                    "weaponbox"
 new const PLAYER[] =                    "player"
 
 // Itens
-new const FLAG_MODEL[] =                "models/ctf_flag.mdl"
+new const FLAG_MODEL[] =                "models/flag_copa_01-05.mdl"
 new const ITEM_MODEL_AMMO[] =            "models/w_chainammo.mdl"
 new const ITEM_MODEL_MEDKIT[] =            "models/w_medkit.mdl"
 new const SND_GETAMMO[] =                "items/9mmclip1.wav"
@@ -697,8 +698,6 @@ new pCvar_mp_fadetoblack
 new pCvar_mp_forcecamera
 new pCvar_mp_forcechasecam
 new pCvar_mp_autoteambalance
-new pCvar_mp_roundtime
-new pCvar_mp_freezetime
 new cannot_move;
 #if FEATURE_C4 == true
 new pCvar_mp_c4timer
@@ -839,6 +838,10 @@ public plugin_init()
     register_clcmd("say", "player_cmd_say")
     register_clcmd("say_team", "player_cmd_say")
 
+// reapi
+    RegisterHookChain(RG_CSGameRules_OnRoundFreezeEnd, "event_OnRoundFreezeEnd");
+
+
 #if FEATURE_ADRENALINE == true
 
     register_menucmd(register_menuid(MENU_ADRENALINE), MENU_KEYS_ADRENALINE, "player_key_adrenaline")
@@ -955,7 +958,7 @@ public plugin_init()
     register_message(get_user_msgid("ClCorpse"), "msg_block")
     register_message(gMsg_HostageK, "msg_block")
     register_message(gMsg_HostagePos, "msg_block")
-    register_message(gMsg_RoundTime, "msg_roundTime")
+    // register_message(gMsg_RoundTime, "msg_roundTime")
     register_message(gMsg_ScreenFade, "msg_screenFade")
     register_message(gMsg_ScoreAttrib, "msg_scoreAttrib")
     register_message(gMsg_TeamScore, "msg_teamScore")
@@ -1475,6 +1478,7 @@ flag_take(iFlagTeam, id)
 
     entity_set_edict(ent, EV_ENT_aiment, id)
     entity_set_int(ent, EV_INT_movetype, MOVETYPE_FOLLOW)
+    entity_set_int(ent, EV_INT_sequence, FLAG_ANI_DROPPED)
     entity_set_int(ent, EV_INT_solid, SOLID_NOT)
 
     g_iFlagHolder[iFlagTeam] = id
@@ -2808,11 +2812,11 @@ public player_adrenalineDrain(id)
 
                 else
                 {
-                    new CsArmorType:ArmorType
-                    new iArmor = cs_get_user_armor(id, ArmorType)
+                    new CsArmorType:armorType
+                    new iArmor = cs_get_user_armor(id, armorType)
 
                     if(iArmor < g_iMaxArmor[id])
-                        cs_set_user_armor(id, iArmor + 1, ArmorType)
+                        cs_set_user_armor(id, iArmor + 1, armorType)
                 }
 
                 player_healingEffect(id)
@@ -3579,13 +3583,13 @@ public player_buyWeapon(id, iWeapon)
     if(!g_bAlive[id])
         return
 
-    new CsArmorType:ArmorType
-    new iArmor = cs_get_user_armor(id, ArmorType)
+    new CsArmorType:armorType
+    new iArmor = cs_get_user_armor(id, armorType)
 
     new iMoney = cs_get_user_money(id)
 
     /* apply discount if you already have a kevlar and buying a kevlar+helmet */
-    new iCost = g_iWeaponPrice[iWeapon] - (ArmorType == CS_ARMOR_KEVLAR && iWeapon == W_VESTHELM ? 650 : 0)
+    new iCost = g_iWeaponPrice[iWeapon] - (armorType == CS_ARMOR_KEVLAR && iWeapon == W_VESTHELM ? 650 : 0)
 
 #if FEATURE_ADRENALINE == true
 
@@ -3649,7 +3653,7 @@ public player_buyWeapon(id, iWeapon)
 
         case W_VESTHELM:
         {
-            if(iArmor >= 100 && ArmorType == CS_ARMOR_VESTHELM)
+            if(iArmor >= 100 && armorType == CS_ARMOR_VESTHELM)
             {
                 client_print(id, print_center, "%L", id, "BUY_HAVE_KEVLARHELM")
                 return
@@ -4184,12 +4188,10 @@ public event_roundStart()
     }
 
     cannot_move = true;
-    new Float:freezetime = get_cvar_float("mp_freezetime");
-    set_task(freezetime, "freezeTimeEnd", 16938)
 }
 
-public freezeTimeEnd(id)
-{
+public event_OnRoundFreezeEnd(id)
+{   
     cannot_move = false;
     for (new i = 1; i < MaxClients; ++i)
     {
