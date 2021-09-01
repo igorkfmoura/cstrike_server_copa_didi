@@ -101,7 +101,7 @@ new const WEAPONBOX[] =                    "weaponbox"
 new const PLAYER[] =                    "player"
 
 // Itens
-new const FLAG_MODEL[] =                "models/flag_copa_01-05.mdl"
+new const FLAG_MODEL[] =                "models/copadidi/flag_copa_02.mdl"
 new const ITEM_MODEL_AMMO[] =            "models/w_chainammo.mdl"
 new const ITEM_MODEL_MEDKIT[] =            "models/w_medkit.mdl"
 new const SND_GETAMMO[] =                "items/9mmclip1.wav"
@@ -691,6 +691,8 @@ new pCvar_ctf_weaponstay
 new pCvar_ctf_spawnmoney
 new pCvar_ctf_itempercent
 new pCvar_ctf_blockkill
+new pCvar_ctf_team_a;
+new pCvar_ctf_team_b;
 new pCvar_ctf_sound[4]
 new pCvar_mp_winlimit
 new pCvar_mp_startmoney
@@ -901,6 +903,7 @@ public plugin_init()
     register_clcmd("ctf_moveflag", "admin_cmd_moveFlag", ADMIN_RCON, "<red/blue> - Moves team's flag base to your origin (for map management)")
     register_clcmd("ctf_save", "admin_cmd_saveFlags", ADMIN_RCON)
     register_clcmd("ctf_return", "admin_cmd_returnFlag", ADMIN_RETURN)
+    register_clcmd("ctf_update", "admin_cmd_updateFlag", ADMIN_RETURN);
 
     register_clcmd("dropflag", "player_cmd_dropFlag")
 
@@ -961,7 +964,7 @@ public plugin_init()
     // register_message(gMsg_RoundTime, "msg_roundTime")
     register_message(gMsg_ScreenFade, "msg_screenFade")
     register_message(gMsg_ScoreAttrib, "msg_scoreAttrib")
-    register_message(gMsg_TeamScore, "msg_teamScore")
+    // register_message(gMsg_TeamScore, "msg_teamScore")
     register_message(gMsg_SayText, "msg_sayText")
 
     // CVARS
@@ -976,27 +979,21 @@ public plugin_init()
     pCvar_ctf_spawnmoney      = register_cvar("ctf_spawnmoney", "3500")
     pCvar_ctf_itempercent     = register_cvar("ctf_itempercent", "5")
     pCvar_ctf_blockkill       = register_cvar("ctf_blockkill", "0");
+    pCvar_ctf_team_a          = register_cvar("ctf_team_a", "0");
+    pCvar_ctf_team_b          = register_cvar("ctf_team_b", "0");
 
 #if FEATURE_BUY == true
-
     pCvar_ctf_nospam_flash = register_cvar("ctf_nospam_flash", "20")
     pCvar_ctf_nospam_he    = register_cvar("ctf_nospam_he", "20")
     pCvar_ctf_nospam_smoke = register_cvar("ctf_nospam_smoke", "20")
 
     gMsg_BuyClose = get_user_msgid("BuyClose")
-
 #endif // FEATURE_BUY
 
     pCvar_ctf_sound[EVENT_TAKEN]    = register_cvar("ctf_sound_taken", "1")
     pCvar_ctf_sound[EVENT_DROPPED]  = register_cvar("ctf_sound_dropped", "1")
     pCvar_ctf_sound[EVENT_RETURNED] = register_cvar("ctf_sound_returned", "1")
     pCvar_ctf_sound[EVENT_SCORE]    = register_cvar("ctf_sound_score", "1")
-
-#if FEATURE_C4 == true
-
-    pCvar_mp_c4timer = get_cvar_pointer("mp_c4timer")
-
-#endif // FEATURE_C4
 
     pCvar_mp_winlimit = get_cvar_pointer("mp_winlimit")
     pCvar_mp_startmoney = get_cvar_pointer("mp_startmoney")
@@ -1006,7 +1003,6 @@ public plugin_init()
     pCvar_mp_autoteambalance = get_cvar_pointer("mp_autoteambalance")
 
     // Plugin's forwards
-
     g_iFW_flag = CreateMultiForward("jctf_flag", ET_IGNORE, FP_CELL, FP_CELL, FP_CELL, FP_CELL)
 
 
@@ -1017,37 +1013,11 @@ public plugin_init()
     HUDINFO = CreateHudSyncObj()
     g_iSync[0] = CreateHudSyncObj()
 
-
-
-#if FEATURE_C4 == true
-    // fake bomb target
-
-    new ent = entity_create(g_szRemoveEntities[2])
-
-    if(ent)
-    {
-        entity_spawn(ent)
-        entity_set_size(ent, Float:{-8192.0, -8192.0, -8192.0}, Float:{8192.0, 8192.0, 8192.0})
-    }
-#endif // FEATURE_C4
-
-    //Zerar Bool (CHECK MAP)
-    Map_Check_Cam = false
-
-    //Desativar este comando nos eventos boss
-    // new map_name[32], check_index
-
-    // MAP NAME
-    // get_mapname(map_name, sizeof(map_name))    
-
-    // // Loop
-    // for(check_index = 0; check_index < sizeof(allow_map_prefix); check_index++)
-    // {
-    //     if(equali(map_name, allow_map_prefix[check_index], strlen(allow_map_prefix[check_index])))
-    //         Map_Check_Cam = true
-    // }
+    Map_Check_Cam = false;
 
 }
+
+
 public plugin_cfg()
 {
     new szFile[64]
@@ -1084,14 +1054,14 @@ public plugin_cfg()
     flag_spawn(TEAM_BLUE)
 
 
-    task_set(6.5, "plugin_postCfg")
+    // task_set(6.5, "plugin_postCfg")
 }
 public plugin_postCfg()
 {
     
-    new cfg_dir[32]
-    get_configsdir(cfg_dir, charsmax(cfg_dir))
-    server_cmd("exec %s/amxx.cfg", cfg_dir)
+    // new cfg_dir[32]
+    // get_configsdir(cfg_dir, charsmax(cfg_dir))
+    // server_cmd("exec %s/amxx.cfg", cfg_dir)
     
     // set_cvar_num("mp_freezetime", 0)
     // set_cvar_num("mp_limitteams", 0)
@@ -1099,7 +1069,7 @@ public plugin_postCfg()
     // set_cvar_num("mp_refill_bpammo_weapons", 2)
     // set_cvar_num("mp_item_staytime", 15)
     // server_cmd("sv_alltalk 1")
-    server_cmd("sv_restart 1")
+    // server_cmd("sv_restart 1")
     // server_cmd("amx_cvar mp_round_infinite 1")
     // server_cmd("amx_cvar mp_timelimit 30")
     // server_cmd("amx_cvar mp_respawn_immunitytime %i", get_pcvar_num(pCvar_ctf_protection))
@@ -1299,10 +1269,21 @@ public flag_spawn(iFlagTeam)
     if(!ent)
         return flag_spawn(iFlagTeam)
 
+    new tmp = iFlagTeam;
+
+    if (iFlagTeam == TEAM_RED)
+    {
+        tmp = TEAM_RED + (get_pcvar_num(pCvar_ctf_team_a) * 2);
+    }
+    else if (iFlagTeam == TEAM_BLUE)
+    {
+        tmp = TEAM_BLUE + (get_pcvar_num(pCvar_ctf_team_b) * 2);
+    }
+
     entity_set_model(ent, FLAG_MODEL)
     entity_set_string(ent, EV_SZ_classname, FLAG_CLASSNAME)
     entity_set_int(ent, EV_INT_body, 1)
-    entity_set_int(ent, EV_INT_skin, iFlagTeam)
+    entity_set_int(ent, EV_INT_skin, tmp)
     entity_set_int(ent, EV_INT_sequence, FLAG_ANI_STAND)
     entity_spawn(ent)
     entity_set_origin(ent, g_fFlagBase[iFlagTeam])
@@ -1483,10 +1464,10 @@ flag_take(iFlagTeam, id)
 
     g_iFlagHolder[iFlagTeam] = id
 
-    message_begin(MSG_BROADCAST, gMsg_ScoreAttrib)
-    write_byte(id)
-    write_byte(get_user_team(id) == TEAM_BLUE ? 4 : 2)
-    message_end()
+    // message_begin(MSG_BROADCAST, gMsg_ScoreAttrib)
+    // write_byte(id)
+    // write_byte(get_user_team(id) == TEAM_BLUE ? 4 : 2)
+    // message_end()
 
     player_updateSpeed(id)
 }
@@ -1579,10 +1560,10 @@ public flag_touch(ent, id)
         }
         else if(g_iFlagHolder[iFlagTeam] == FLAG_HOLD_BASE && g_iFlagHolder[iFlagTeamOp] == id) // if the PLAYER has the ENEMY FLAG and the FLAG is in the BASE make SCORE
         {
-            message_begin(MSG_BROADCAST, gMsg_ScoreAttrib)
-            write_byte(id)
-            write_byte(0)
-            message_end()
+            // message_begin(MSG_BROADCAST, gMsg_ScoreAttrib)
+            // write_byte(id)
+            // write_byte(0)
+            // message_end()
 
             player_award(id, REWARD_CAPTURE, "%L", id, "REWARD_CAPTURE")
 
@@ -1628,9 +1609,21 @@ public flag_touch(ent, id)
 
             log_message("<%s>%s captured the ^"%s^" flag. (%d assists)", g_szTeamName[iTeam], szName, g_szTeamName[iFlagTeamOp], iAssists)
 
+            new wins;
+            if (iFlagTeam == TEAM_BLUE)
+            {
+                wins = 1 + get_member_game(m_iNumCTWins);
+                set_member_game(m_iNumCTWins, wins);
+            }
+            else
+            {
+                wins = 1 + get_member_game(m_iNumTerroristWins);
+                set_member_game(m_iNumTerroristWins, wins);
+            }
+
             emessage_begin(MSG_BROADCAST, gMsg_TeamScore)
             ewrite_string(g_szCSTeams[iFlagTeam])
-            ewrite_short(++g_iScore[iFlagTeam])
+            ewrite_short(wins)
             emessage_end()
 
             flag_sendHome(iFlagTeamOp)
@@ -1939,7 +1932,7 @@ public xSelectGuns(id)
 {
     new xFmtx[1024], xKey[24], i
     
-    formatex(xFmtx, charsmax(xFmtx), "\y[COPA SÃO JOÃO] \r~\w Menu de Armas")
+    formatex(xFmtx, charsmax(xFmtx), "\y[COPA DIDI] \r~\w Menu de Armas")
     
     new xMenu = menu_create(xFmtx, "_xSelectGuns")
     
@@ -2987,6 +2980,28 @@ public admin_cmd_returnFlag(id, level, cid)
 
     return PLUGIN_HANDLED
 }
+
+public admin_cmd_updateFlag(id)
+{
+    if (!is_user_connected(id))
+    {
+        return PLUGIN_HANDLED;
+    }
+
+    new tmp;
+
+    tmp = TEAM_RED + (get_pcvar_num(pCvar_ctf_team_a) * 2);
+    console_print(id, "[admin_cmd_updateFlag] skin_tr: %d", tmp);
+    entity_set_int(g_iFlagEntity[TEAM_RED], EV_INT_skin, tmp);
+
+    tmp = TEAM_BLUE + (get_pcvar_num(pCvar_ctf_team_b) * 2);
+    console_print(id, "[admin_cmd_updateFlag] skin_ct: %d", tmp);
+    entity_set_int(g_iFlagEntity[TEAM_BLUE], EV_INT_skin, tmp);
+
+    return PLUGIN_HANDLED;
+}
+
+
 #if FEATURE_BUY == true
 public player_inBuyZone(id)
 {
