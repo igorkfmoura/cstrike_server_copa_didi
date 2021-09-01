@@ -1,0 +1,506 @@
+#include <amxmodx>
+#include <reapi>
+
+#define PLUGIN  "CTF Match"
+#define VERSION "0.1"
+#define AUTHOR  "lonewolf"
+
+#define TASKID_CLIENT_CMD 9352
+
+new const CHAT_PREFIX[] = "^4[CTF Match]^1";
+
+new const team_names[TeamName][] = 
+{
+  "", 
+  "TR", 
+  "CT", 
+  "SPEC"
+};
+
+enum _:CTFMatchConfig
+{
+  Float:CTF_FREEZETIME,
+  Float:CTF_ROUNDTIME,
+  CTF_MAXPOINTS,
+  CTF_HAS_KNIFEROUND,
+  Float:CTF_ROUNDTIME_KNIFE,
+  CTF_FORCERESPAWN,
+  CTF_ALLTALK,
+};
+new configs[CTFMatchConfig];
+new configs_bak[CTFMatchConfig];
+
+new const CONFIGS_DEFAULT[CTFMatchConfig] =
+{
+  15.0,
+  15.0,
+  10,
+  0,
+  0.4,
+  5,
+  2,
+};
+
+
+enum _:CTFMatch
+{
+  CTF_STARTED,
+  CTF_KNIFEROUND,
+  TeamName:CTF_KNIFEROUND_WINNER,
+  CTF_IS_1STHALF,
+  CTF_IS_2NDHALF,
+  CTF_TEAM_A_POINTS,
+  CTF_TEAM_A_ID,
+  CTF_TEAM_B_POINTS,
+  CTF_TEAM_B_ID,
+};
+new match[CTFMatch];
+
+new countdown_ent;
+new countdown;
+
+new motd_buffer[1024];
+
+new msg_CurWeapon;
+new cvar_knife;
+
+public plugin_init()
+{
+  register_plugin(PLUGIN, VERSION, AUTHOR);
+
+  register_clcmd("say /ctf",          "cmd_test", ADMIN_CVAR);
+  register_clcmd("say /ctfmenu",      "cmd_test", ADMIN_CVAR);
+  register_clcmd("say_team /ctf",     "cmd_test", ADMIN_CVAR);
+  register_clcmd("say_team /ctfmenu", "cmd_test", ADMIN_CVAR);
+
+  for (new i = CTF_FREEZETIME; i < sizeof(configs); ++i)
+  {
+    configs[i] = CONFIGS_DEFAULT[i];
+  }
+
+  RegisterHookChain(RG_CSGameRules_OnRoundFreezeEnd, "event_OnRoundFreezeEnd");
+  RegisterHookChain(RG_RoundEnd, "event_RoundEnd"); 
+  RegisterHookChain(RG_CSGameRules_RestartRound, "event_RestartRound");
+
+  cvar_knife = create_cvar("match_knife", "0");
+  msg_CurWeapon = register_event("CurWeapon", "event_CurWeapon", "b", "1=1", "2!29");
+}
+
+
+public event_CurWeapon(id)
+{
+  if (is_user_alive(id) && get_pcvar_num(cvar_knife))
+  {
+      engclient_cmd(id, "weapon_knife");
+  }
+}
+
+
+public cmd_test(id)
+{
+  if (is_user_connected(id))
+  {
+    menu_ctf(id);
+  }
+
+  return PLUGIN_HANDLED;
+}
+
+
+public menu_ctf(id)
+{
+  new menu = menu_create("CTF Menu", "menu_ctf_handler");
+  // client_print_color(id, id, "now: %f", get_gametime());
+
+  new bool:complete_reset = get_member_game(m_bCompleteReset);
+  new const onoff[2][16] = {"\rDesativado", "\yAtivado"};
+
+  static item[64];
+  formatex(item, charsmax(item), "Complete Reset: %s", onoff[complete_reset]);
+
+  if (!match[CTF_STARTED])
+  {
+    menu_additem(menu, "Iniciar partida");
+  }
+  else
+  {
+    menu_additem(menu, "\rFinalizar partida");
+  }
+
+  menu_additem(menu, "\dConfigurar partida");
+  menu_addblank2(menu);
+  menu_addblank2(menu);
+  menu_additem(menu, "Restart round");
+  menu_additem(menu, item);
+  menu_additem(menu, "Inverter times");
+  menu_additem(menu, "Forçar fim de round");
+  // menu_additem(menu, "Tirar Faca");
+
+  menu_display(id, menu);
+}
+
+
+public menu_ctf_handler(id, menu, item)
+{
+  if (item == MENU_EXIT || !is_user_connected(id))
+  {
+    menu_destroy(menu);
+    return PLUGIN_HANDLED;
+  }
+
+  // client_print_color(id, id, "^4[menu_ctf_handler]^1 item: %d", item);
+
+  switch (item)
+  {
+    case 0:
+    {
+      if (match[CTF_STARTED])
+      {
+        match_end();
+      }
+      else
+      {
+        match_start();
+      }
+    }
+    case 1:
+    {
+
+    }
+    case 4:
+    {
+      rg_restart_round();
+    }
+    case 5:
+    {
+      new bool:complete_reset = get_member_game(m_bCompleteReset);
+      set_member_game(m_bCompleteReset, !complete_reset);
+    }
+    case 6:
+    {
+      rg_swap_all_players();
+    }
+    case 7:
+    {
+      countdown = 0;
+    }
+  }
+
+  menu_destroy(menu);
+  menu_ctf(id);
+  return PLUGIN_HANDLED;
+}
+
+
+public event_OnRoundFreezeEnd(id)
+{
+  if (!match[CTF_STARTED])
+  {
+    return HC_CONTINUE;
+  }
+
+  new Float:now = get_gametime();
+  new roundtime = get_member_game(m_iRoundTime);
+
+  new systime = get_systime();
+  new timestr[64];
+
+  format_time(timestr, charsmax(timestr), "^4%Y/%m/%d^1 - ^4%H:%M:%S^1", systime);
+  client_print_color(0, print_team_red, "%s Partida começou! %s", CHAT_PREFIX, timestr);
+  format_time(timestr, charsmax(timestr), "^3%Y/%m/%d^1 - ^3%H:%M:%S^1", systime + roundtime - 1);
+  client_print_color(0, print_team_red, "%s Troca de lado em: %s", CHAT_PREFIX, timestr);
+
+  if (!countdown_ent)
+  {
+    countdown_ent = rg_create_entity("info_target");
+    SetThink(countdown_ent, "event_countdown");
+    set_entvar(countdown_ent, var_classname, "countdown");
+  }
+
+  countdown = roundtime - 1;
+  set_entvar(countdown_ent, var_nextthink, now + 1.0);
+
+  return HC_CONTINUE;
+}
+
+
+public event_countdown(ent)
+{
+  if (!match[CTF_STARTED])
+  {
+    return HC_CONTINUE;
+  }
+
+  countdown--;
+
+  static text[64];
+  num_to_word(countdown, text, charsmax(text));
+
+  if ((countdown <= 10) && countdown > 0)
+  {
+    client_cmd(0, "spk %s", text)
+  }
+
+  if (countdown <= 0)
+  {
+    if (match[CTF_KNIFEROUND])
+    {
+      match_kniferound_end();
+
+      return HC_CONTINUE;
+    }
+
+    if (match[CTF_IS_1STHALF])
+    {
+      rg_swap_all_players();
+      
+      new bool:complete_reset = get_member_game(m_bCompleteReset);
+
+      set_member_game(m_bCompleteReset, false);
+      rg_restart_round();
+      set_member_game(m_bCompleteReset, complete_reset);
+  
+      match[CTF_IS_1STHALF] = 0;
+      match[CTF_IS_2NDHALF] = 1;
+      
+      return HC_CONTINUE;
+    }
+
+    if (match[CTF_IS_2NDHALF])
+    {
+      match_end();
+
+      return HC_CONTINUE;
+    }
+  }
+  
+  new Float:now = get_gametime();
+  set_entvar(countdown_ent, var_nextthink, now + 1.0);
+
+  return HC_CONTINUE;
+}
+
+
+public event_RestartRound(id)
+{
+  // client_print_color(0, 0, "^4[event_RestartRound]^1 triggered");
+
+  if (!match[CTF_STARTED])
+  {
+    return HC_CONTINUE;
+  }
+
+  if (match[CTF_KNIFEROUND] == 2)
+  {
+    set_cvar_float("mp_roundtime", configs[CTF_ROUNDTIME]);
+    set_cvar_string("mp_round_infinite", "bcdefghijk"); // Can end by team death;
+    set_cvar_num("mp_force_respawn", configs_bak[CTF_FORCERESPAWN]);
+
+    match[CTF_KNIFEROUND] = 0;
+    match[CTF_IS_1STHALF] = 1;
+  }
+
+  return HC_CONTINUE;
+}
+
+
+public event_RoundEnd(WinStatus:status, ScenarioEventEndRound:event, Float:tmDelay)
+{
+  // client_print_color(0, 0, "^4[event_RoundEnd]^1 triggered, status: %d", status);
+
+  if (!match[CTF_STARTED])
+  {
+    return HC_CONTINUE;
+  }
+
+  if (match[CTF_KNIFEROUND] && status != WINSTATUS_NONE)
+  {
+    match[CTF_KNIFEROUND_WINNER] = TeamName:status;
+
+    match_kniferound_end();
+  }
+  
+  return HC_CONTINUE;
+}
+
+
+public match_kniferound_end()
+{
+  new alives[TeamName] = {0, 0, 0, 0};
+
+  if (match[CTF_KNIFEROUND_WINNER])
+  {
+    alives[match[CTF_KNIFEROUND_WINNER]] = 1337;
+  }
+  else
+  {
+    for (new id = 1; id <= MaxClients; ++id)
+    {
+      if (is_user_connected(id) && is_user_alive(id))
+      {
+        new TeamName:team = get_member(id, m_iTeam);
+        ++alives[team];
+      }
+    }
+  }
+
+  set_dhudmessage(255, 255, 255, -1.0, 0.29, 2, 6.0, 6.0);
+
+  if (alives[TEAM_TERRORIST] > alives[TEAM_CT])
+  {
+    client_print_color(0, print_team_red, "%s Time ^3Terrorista^1 venceu o round faca!", CHAT_PREFIX)
+    show_dhudmessage(0, "Time Terrorista venceu o round faca!", configs[CTF_ROUNDTIME_KNIFE]);
+    match[CTF_KNIFEROUND_WINNER] = TEAM_TERRORIST;
+  }
+  else if (alives[TEAM_TERRORIST] < alives[TEAM_CT])
+  {
+    client_print_color(0, print_team_blue, "%s Time ^3CT^1 venceu o round faca!", CHAT_PREFIX)
+    show_dhudmessage(0, "Time CT venceu o round faca!", configs[CTF_ROUNDTIME_KNIFE]);
+    match[CTF_KNIFEROUND_WINNER] = TEAM_TERRORIST;
+  }
+  else
+  {
+    client_print_color(0, print_team_blue, "%s Os times empataram o round faca!", CHAT_PREFIX)
+    show_dhudmessage(0, "Os times empataram o round faca!", configs[CTF_ROUNDTIME_KNIFE]);
+
+    match[CTF_KNIFEROUND_WINNER] = (random_num(0, 1)) ? TEAM_TERRORIST : TEAM_CT;
+    if (match[CTF_KNIFEROUND_WINNER] == TEAM_TERRORIST)
+    {
+      client_print_color(0, print_team_red, "%s Por sorteio o vencedor foi: ^3Time Terrorista^3!", CHAT_PREFIX)
+    }
+    else
+    {
+      client_print_color(0, print_team_blue, "%s Por sorteio o vencedor foi: ^3Time CT^3!", CHAT_PREFIX)
+    }
+  }
+
+  match[CTF_KNIFEROUND] = 2;
+  
+  set_cvar_float("mp_freezetime", configs[CTF_FREEZETIME]);
+  set_cvar_string("mp_round_infinite", "bcdefghijk");
+  set_cvar_num("mp_force_respawn", configs_bak[CTF_FORCERESPAWN]);
+
+  set_cvar_num("sv_restart", 1)
+  client_cmd(0, "spk deeoo");
+}
+
+
+public match_start()
+{
+  configs_bak[CTF_FREEZETIME]   = get_cvar_float("mp_freezetime");
+  configs_bak[CTF_ROUNDTIME]    = get_cvar_float("mp_roundtime");
+  configs_bak[CTF_FORCERESPAWN] = get_cvar_num("mp_forcerespawn");
+  configs_bak[CTF_ALLTALK] = get_cvar_num("sv_alltalk");
+
+  set_cvar_float("mp_freezetime", configs[CTF_FREEZETIME]);
+  set_cvar_num("sv_alltalk", configs[CTF_ALLTALK]);
+  
+  match[CTF_STARTED]    = true;
+  match[CTF_KNIFEROUND]   = configs[CTF_HAS_KNIFEROUND];
+  match[CTF_KNIFEROUND_WINNER] = TEAM_UNASSIGNED;
+  match[CTF_IS_1STHALF] = false;
+  match[CTF_IS_2NDHALF] = false;
+
+  if (match[CTF_KNIFEROUND])
+  {
+    set_cvar_float("mp_roundtime",  configs[CTF_ROUNDTIME_KNIFE]);
+
+    set_dhudmessage(255, 255, 255, -1.0, 0.29, 2, 6.0, 6.0);
+    show_dhudmessage(0, "ROUND FACA! SEM RESPAWN! %f", configs[CTF_ROUNDTIME_KNIFE]);
+
+    set_cvar_string("mp_round_infinite", "bcdeghijk"); // Can end by team death;
+    set_cvar_num("mp_forcerespawn", 0);
+  }
+  else
+  {
+    set_cvar_float("mp_roundtime",  configs[CTF_ROUNDTIME]);
+    set_cvar_string("mp_round_infinite", "bcdefghijk");
+    set_cvar_num("mp_force_respawn", configs_bak[CTF_FORCERESPAWN]);
+
+    match[CTF_IS_1STHALF] = true;
+  }
+
+  set_cvar_num("sv_restart", 1)
+  client_cmd(0, "spk deeoo");
+}
+
+
+public match_end()
+{
+  match[CTF_STARTED]    = false;
+  match[CTF_KNIFEROUND] = false;
+  match[CTF_IS_1STHALF] = false;
+  match[CTF_IS_2NDHALF] = false;
+  
+  generate_motd();
+
+  // client_cmd(0, "spk deeoo");
+  // set_cvar_num("sv_restart", 1)
+  
+  set_cvar_float("mp_freezetime", configs_bak[CTF_FREEZETIME]);
+  set_cvar_float("mp_roundtime",  configs_bak[CTF_ROUNDTIME]);
+  set_cvar_num("sv_alltalk", configs_bak[CTF_ALLTALK]);
+
+  emessage_begin(MSG_ALL, SVC_INTERMISSION);
+  emessage_end();
+  // show_motd(0, motd_buffer);
+}
+
+
+public generate_motd()
+{
+  static buffer[128];
+
+  new kills[MAX_PLAYERS + 1];
+  new deaths[MAX_PLAYERS + 1];
+
+  new wins[TeamName];
+  wins[TEAM_TERRORIST] = get_member_game(m_iNumCTWins);
+  wins[TEAM_CT]        = get_member_game(m_iNumTerroristWins);
+  
+  format(motd_buffer, charsmax(motd_buffer), "[Time A] %d x %d[Time B]<br>", wins[TEAM_TERRORIST], wins[TEAM_CT]);
+
+  if (wins[TEAM_TERRORIST] > wins[TEAM_CT])
+  {
+    add(motd_buffer, charsmax(motd_buffer), "Time A venceu o Time B!");
+  }
+  else if (wins[TEAM_TERRORIST] < wins[TEAM_CT])
+  {
+    add(motd_buffer, charsmax(motd_buffer), "Time B venceu o Time A!");
+  }
+  else
+  {
+    add(motd_buffer, charsmax(motd_buffer), "Time A e B empataram!");
+  }
+
+  add(motd_buffer, charsmax(motd_buffer), "<br>");
+
+  for (new id = 1; id <= MaxClients; id++)
+  {
+    if (!is_user_connected(id))
+    {
+      continue;
+    }
+
+    new TeamName:team = get_member(id, m_iTeam);
+    if (team == TEAM_TERRORIST || team == TEAM_CT)
+    {
+      kills[id]  = floatround(get_entvar(id, var_frags));
+      deaths[id] = get_member(id, m_iDeaths);
+
+      get_user_name(id, buffer, charsmax(buffer));
+      format(buffer, charsmax(buffer), "[%s] %s: %d / %d", team_names[team], buffer, kills[id], deaths[id])
+
+      client_print(0, print_console, buffer);
+
+      add(motd_buffer, charsmax(motd_buffer), "<br>");
+      add(motd_buffer, charsmax(motd_buffer), buffer);
+    }
+  }
+}
+
+
+// public client_cmd_delayed()
+// {
+
+// }
