@@ -3,19 +3,43 @@
 #include <jctf>
 
 #define PLUGIN  "CTF Match"
-#define VERSION "0.4"
+#define VERSION "0.5"
 #define AUTHOR  "lonewolf"
 
 #define TASKID_CLIENT_CMD 9352
 
 new const CHAT_PREFIX[] = "^4[CTF Match]^1";
 
-new const team_names[TeamName][] = 
+// new const team_names[TeamName][] = 
+// {
+//   "", 
+//   "TIME A", 
+//   "TIME B", 
+//   "SPEC"
+// };
+
+new const clans[][] =
+  {
+    "All Stars",
+    "Brasil Arms",
+    "ep1c gaming Brasil",
+    "Fúria no Gatilho",
+    "Kingdom",
+    "Recruta",
+    "OSKRAXORA",
+    "Esquadrão Fúria no Gatilho"
+  };
+
+enum _:FlagEvent
 {
-  "", 
-  "TIME A", 
-  "TIME B", 
-  "SPEC"
+  FLAG_STOLEN = 0,
+  FLAG_PICKED,
+  FLAG_DROPPED,
+  FLAG_MANUALDROP,
+  FLAG_RETURNED,
+  FLAG_CAPTURED,
+  FLAG_AUTORETURN,
+  FLAG_ADMINRETURN
 };
 
 enum _:CTFMatchConfig
@@ -62,7 +86,7 @@ new countdown;
 
 new motd_buffer[1024];
 
-new msg_CurWeapon;
+// new msg_CurWeapon; 
 new cvar_knife;
 
 public plugin_init()
@@ -84,7 +108,7 @@ public plugin_init()
   RegisterHookChain(RG_CSGameRules_RestartRound, "event_RestartRound");
 
   cvar_knife = create_cvar("match_knife", "0");
-  msg_CurWeapon = register_event("CurWeapon", "event_CurWeapon", "b", "1=1", "2!29");
+  register_event("CurWeapon", "event_CurWeapon", "b", "1=1", "2!29"); // todo: unregister hook
 }
 
 
@@ -117,22 +141,15 @@ public menu_ctf(id)
   new const onoff[2][16] = {"\rDesativado", "\yAtivado"};
 
   static item[64];
-  formatex(item, charsmax(item), "Complete Reset: %s", onoff[complete_reset]);
-
-  if (!match[CTF_STARTED])
-  {
-    menu_additem(menu, "Iniciar partida");
-  }
-  else
-  {
-    menu_additem(menu, "\rFinalizar partida");
-  }
-
+  
+  menu_additem(menu, match[CTF_STARTED] ? "\rFinalizar partida" : "Iniciar partida");
   menu_additem(menu, "\dConfigurar partida");
-  menu_addblank2(menu);
-  menu_addblank2(menu);
-  menu_additem(menu, "Restart round");
+  menu_additem(menu, (get_cvar_num("mp_freezetime") == 1337) ? "\rDestravar times" : "Travar times na base");
+  menu_additem(menu, (get_cvar_num("match_knife") == 0) ? "Iniciar Round Faca" : "\rFinalizar Round Faca");
+  menu_additem(menu, "Insta Restart round");
+  formatex(item, charsmax(item), "Complete Reset: %s", onoff[complete_reset]);
   menu_additem(menu, item);
+
   menu_additem(menu, "Inverter times");
   menu_additem(menu, "Forçar fim de round");
   // menu_additem(menu, "Tirar Faca");
@@ -168,9 +185,58 @@ public menu_ctf_handler(id, menu, item)
     {
 
     }
+    case 2:
+    {
+      set_dhudmessage(255, 255, 255, -1.0, 0.29, 2, 6.0, 6.0);
+
+      if (get_cvar_num("mp_freezetime") == 1337)
+      {
+        set_cvar_num("mp_freezetime", 0);
+        show_dhudmessage(0, "TIMES DESTRAVADOS");
+      }
+      else
+      {
+        set_cvar_num("mp_freezetime", 1337);
+        show_dhudmessage(0, "TIMES TRAVADOS NA BASE");
+      }
+
+      rg_restart_round();
+      client_cmd(0, "spk deeoo");
+
+    }
+    case 3:
+    {
+      if (get_cvar_num("match_knife") == 0)
+      {
+        set_cvar_num("mp_freezetime", 15);
+        set_cvar_num("mp_forcerespawn", 0);
+        set_cvar_num("match_knife", 1);
+        
+        rg_restart_round();
+        client_cmd(0, "spk deeoo");
+
+        set_dhudmessage(255, 255, 255, -1.0, 0.29, 2, 6.0, 6.0);
+        show_dhudmessage(0, "ROUND FACA SEM RESPAWN");
+      }
+      else
+      {
+        set_cvar_num("mp_freezetime", 1337);
+        set_cvar_num("mp_forcerespawn", 5);
+        set_cvar_num("match_knife", 0);
+        
+        rg_restart_round();
+        client_cmd(0, "spk deeoo");
+
+        set_dhudmessage(255, 255, 255, -1.0, 0.29, 2, 6.0, 6.0);
+        show_dhudmessage(0, "FIM DO ROUND FACA");
+      }
+    }
     case 4:
     {
       rg_restart_round();
+      client_cmd(0, "spk deeoo");
+
+      client_print(0, print_center, "Restarting...");
     }
     case 5:
     {
@@ -192,6 +258,42 @@ public menu_ctf_handler(id, menu, item)
   return PLUGIN_HANDLED;
 }
 
+public jctf_flag(event, id, flagteam, bool:is_assist)
+{
+  if (event != FLAG_CAPTURED || !match[CTF_STARTED])
+  {
+    return;
+  }
+  
+  if ((flagteam != _:TEAM_TERRORIST) && (flagteam != _:TEAM_CT))
+  {
+    return;
+  }
+
+  new max = (match[CTF_IS_2NDHALF] ? configs[CTF_MAXPOINTS] * 2 : configs[CTF_MAXPOINTS]);
+
+  new points;
+  new t;
+
+  if (flagteam == _:TEAM_CT)
+  {
+    points = get_member_game(m_iNumTerroristWins) + 1;
+    t = get_cvar_num("ctf_team_a");
+  }
+  else
+  {
+    points = get_member_game(m_iNumCTWins) + 1;
+    t = get_cvar_num("ctf_team_b");
+  }
+  
+  if (points >= max)
+  {
+    client_print_color(0, (flagteam == _:TEAM_CT) ? print_team_red : print_team_blue, "%s Time ^3%s^1 capturou ^4%d^1 bandeiras!", CHAT_PREFIX, clans[t], points);
+    countdown = 0;
+  }
+
+  client_print(0, print_chat, "[jctf_flag] flagteam: %d, clan: %s, points: %d, max: %d", flagteam, clans[t], points, max)
+}
 
 public event_OnRoundFreezeEnd(id)
 {
@@ -269,7 +371,7 @@ public event_countdown(ent)
         user_silentkill(id);
         set_user_adrenaline(id, 0);
         rg_add_account(id, startmoney, AS_SET);
-        client_cmd(id, "say /destroy"); // ... for when you gaze long into the abyss. The abyss gazes also into you.
+        // client_cmd(id, "say /destroy"); // ... for when you gaze long into the abyss. The abyss gazes also into you.
       }
 
       new a = get_cvar_num("ctf_team_a");
@@ -281,6 +383,15 @@ public event_countdown(ent)
       new count_b = 0;
 
       new ent = MaxClients + 1;
+      while ((ent = rg_find_ent_by_class(ent, "NiceDispenser:D")))
+      {
+        if (is_entity(ent))
+        {
+          set_entvar(ent, var_flags, get_entvar(ent, var_flags) | FL_KILLME);
+        }
+      }
+
+      ent = MaxClients + 1;
       while ((ent = rg_find_ent_by_class(ent, "placedmodel")))
       {
         new skin = get_entvar(ent, var_skin);
@@ -314,6 +425,12 @@ public event_countdown(ent)
       set_cvar_num("ctf_team_b", a);
 
       server_cmd("ctf_update");
+
+      
+      client_cmd(0, "spk deeoo")
+
+      set_dhudmessage(255, 255, 255, -1.0, 0.29, 1, 6.0, 6.0);
+      show_dhudmessage(0, "TROCA DE LADO, VALENDO!");
 
       set_member_game(m_bCompleteReset, false);
       rg_restart_round();
@@ -517,26 +634,6 @@ public match_end()
 
 public generate_motd()
 {
-  new const clans[][] =
-  {
-    "All Stars",
-    "Brasil Arms",
-    "ep1c gaming Brasil",
-    "Fúria no Gatilho",
-    "Kingdom",
-    "Recruta",
-    "OSKRAXORA",
-    "Esquadrão Fúria no Gatilho"
-  };
-
-  // { "banner_ast.bmp" }
-	// { "banner_bra.bmp" }
-	// { "banner_ep1c.bmp" }
-	// { "banner_fng.bmp" }
-	// { "banner_kng2.bmp" }
-	// { "banner_recruta.bmp" }
-	// { "banner_okx.bmp" }
-	// { "banner_okx2.bmp" }
   static buffer[128];
 
   new kills[MAX_PLAYERS + 1];
