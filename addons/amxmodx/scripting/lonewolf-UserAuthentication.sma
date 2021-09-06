@@ -3,7 +3,7 @@
 #include <fakemeta>
 
 #define PLUGIN  "UserAuthentication"
-#define VERSION "0.1"
+#define VERSION "0.1.1"
 #define AUTHOR  "lonewolf"
 
 static const CHAT_PREFIX[] = "^4[UserAuthentication]^1";
@@ -91,15 +91,17 @@ public event_ClientUserInfoChanged(id, buffer)
     return FMRES_IGNORED;
   }
 
-  format(name_new, charsmax(name_new), "%s%s", prefix_unauth, name_new);
-
-  if (!equal(name_new, name_old))
+  if (!equali(prefix_unauth, name_new, charsmax(prefix_unauth)))
   {
-    server_print("ClientUserInfoChanged: setting name: %s", name_new);
-    set_user_info(id, info_name, name_new);
-    return FMRES_SUPERCEDE;
-  }
+    format(name_new, charsmax(name_new), "%s%s", prefix_unauth, name_new);
 
+    if (!equal(name_new, name_old))
+    {
+      server_print("ClientUserInfoChanged: setting name: %s", name_new);
+      set_user_info(id, info_name, name_new);
+      return FMRES_SUPERCEDE;
+    }
+  }
 
   return FMRES_IGNORED;
 } 
