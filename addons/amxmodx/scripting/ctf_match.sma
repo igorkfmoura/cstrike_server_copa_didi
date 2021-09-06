@@ -1,8 +1,9 @@
 #include <amxmodx>
 #include <reapi>
+#include <jctf>
 
 #define PLUGIN  "CTF Match"
-#define VERSION "0.1"
+#define VERSION "0.4"
 #define AUTHOR  "lonewolf"
 
 #define TASKID_CLIENT_CMD 9352
@@ -12,8 +13,8 @@ new const CHAT_PREFIX[] = "^4[CTF Match]^1";
 new const team_names[TeamName][] = 
 {
   "", 
-  "TR", 
-  "CT", 
+  "TIME A", 
+  "TIME B", 
   "SPEC"
 };
 
@@ -256,6 +257,64 @@ public event_countdown(ent)
       
       new bool:complete_reset = get_member_game(m_bCompleteReset);
 
+      new startmoney = get_cvar_num("mp_startmoney");
+
+      for (new id = 1; id <= MaxClients; ++id)
+      {
+        if (!is_user_connected(id))
+        {
+          continue;
+        }
+
+        user_silentkill(id);
+        set_user_adrenaline(id, 0);
+        rg_add_account(id, startmoney, AS_SET);
+        client_cmd(id, "say /destroy"); // ... for when you gaze long into the abyss. The abyss gazes also into you.
+      }
+
+      new a = get_cvar_num("ctf_team_a");
+      new b = get_cvar_num("ctf_team_b");
+
+      new placedmodels_a[12];
+      new placedmodels_b[12];
+      new count_a = 0;
+      new count_b = 0;
+
+      new ent = MaxClients + 1;
+      while ((ent = rg_find_ent_by_class(ent, "placedmodel")))
+      {
+        new skin = get_entvar(ent, var_skin);
+        if (skin == a)
+        {
+          placedmodels_a[count_a++] = ent;
+        }
+        else if (skin == b)
+        {
+          placedmodels_b[count_b++] = ent;
+        }
+      }
+
+      new i;
+      for (i = 0; i < count_a; ++i)
+      {
+        if (is_entity(placedmodels_a[i]))
+        {
+          set_entvar(placedmodels_a[i], var_skin, b);
+        }
+      }
+      for (i = 0; i < count_b; ++i)
+      {
+        if (is_entity(placedmodels_b[i]))
+        {
+          set_entvar(placedmodels_b[i], var_skin, a);
+        }
+      }
+
+      set_cvar_num("ctf_team_a", b);
+      set_cvar_num("ctf_team_b", a);
+
+      server_cmd("ctf_update");
+
       set_member_game(m_bCompleteReset, false);
       rg_restart_round();
       set_member_game(m_bCompleteReset, complete_reset);
@@ -415,10 +474,19 @@ public match_start()
   {
     set_cvar_float("mp_roundtime",  configs[CTF_ROUNDTIME]);
     set_cvar_string("mp_round_infinite", "bcdefghijk");
-    set_cvar_num("mp_force_respawn", configs_bak[CTF_FORCERESPAWN]);
+    set_cvar_num("mp_force_respawn", 5);
 
     match[CTF_IS_1STHALF] = true;
   }
+
+  set_cvar_num("amx_demo_auto",   1);
+  set_cvar_num("amx_demo_time",   1);
+  set_cvar_num("amx_demo_map",    1);
+  set_cvar_num("amx_demo_steam",  0);
+  set_cvar_num("amx_demo_nick",   1);
+  set_cvar_num("amx_demo_notify", 1);
+
+  server_cmd("amx_demoall");
 
   set_cvar_num("sv_restart", 1)
   client_cmd(0, "spk deeoo");
@@ -434,7 +502,7 @@ public match_end()
   
   generate_motd();
 
-  // client_cmd(0, "spk deeoo");
+  client_cmd(0, "spk deeoo");
   // set_cvar_num("sv_restart", 1)
   
   set_cvar_float("mp_freezetime", configs_bak[CTF_FREEZETIME]);
@@ -449,20 +517,43 @@ public match_end()
 
 public generate_motd()
 {
+  new const clans[][] =
+  {
+    "All Stars",
+    "Brasil Arms",
+    "ep1c gaming Brasil",
+    "Fúria no Gatilho",
+    "Kingdom",
+    "Recruta",
+    "OSKRAXORA",
+    "Esquadrão Fúria no Gatilho"
+  };
+
+  // { "banner_ast.bmp" }
+	// { "banner_bra.bmp" }
+	// { "banner_ep1c.bmp" }
+	// { "banner_fng.bmp" }
+	// { "banner_kng2.bmp" }
+	// { "banner_recruta.bmp" }
+	// { "banner_okx.bmp" }
+	// { "banner_okx2.bmp" }
   static buffer[128];
 
   new kills[MAX_PLAYERS + 1];
   new deaths[MAX_PLAYERS + 1];
 
   new wins[TeamName];
-  wins[TEAM_TERRORIST] = get_member_game(m_iNumCTWins);
-  wins[TEAM_CT]        = get_member_game(m_iNumTerroristWins);
+  wins[TEAM_TERRORIST] = get_member_game(m_iNumTerroristWins);
+  wins[TEAM_CT]        = get_member_game(m_iNumCTWins);
   
-  format(motd_buffer, charsmax(motd_buffer), "[Time A] %d x %d[Time B]<br>", wins[TEAM_TERRORIST], wins[TEAM_CT]);
+  new a = get_cvar_num("ctf_team_a");
+  new b = get_cvar_num("ctf_team_b");
+
+  format(motd_buffer, charsmax(motd_buffer), "[%s] %d x %d [%s]<br>", clans[a], wins[TEAM_TERRORIST], wins[TEAM_CT], clans[b]);
 
   if (wins[TEAM_TERRORIST] > wins[TEAM_CT])
   {
-    add(motd_buffer, charsmax(motd_buffer), "Time A venceu o Time B!");
+    add(motd_buffer, charsmax(motd_buffer), "Time A venceu o Time B");
   }
   else if (wins[TEAM_TERRORIST] < wins[TEAM_CT])
   {
@@ -474,6 +565,11 @@ public generate_motd()
   }
 
   add(motd_buffer, charsmax(motd_buffer), "<br>");
+
+  client_print(0, print_console, "^n-----------------");
+  client_print(0, print_console, "FIM DA PARTIDA!");
+  client_print(0, print_console, "-----------------^n");
+  client_print(0, print_console, "[%s] %d x %d [%s]^n^nScores:", clans[a], wins[TEAM_TERRORIST], wins[TEAM_CT], clans[b]);
 
   for (new id = 1; id <= MaxClients; id++)
   {
@@ -489,7 +585,7 @@ public generate_motd()
       deaths[id] = get_member(id, m_iDeaths);
 
       get_user_name(id, buffer, charsmax(buffer));
-      format(buffer, charsmax(buffer), "[%s] %s: %d / %d", team_names[team], buffer, kills[id], deaths[id])
+      format(buffer, charsmax(buffer), "[%s] %s: %d/%d", clans[(team == TEAM_CT) ? b : a], buffer, kills[id], deaths[id])
 
       client_print(0, print_console, buffer);
 
@@ -497,6 +593,13 @@ public generate_motd()
       add(motd_buffer, charsmax(motd_buffer), buffer);
     }
   }
+
+  static timestr[64];
+  format_time(timestr, charsmax(timestr), "^4%Y/%m/%d^1 - ^4%H:%M:%S^1");
+
+  client_print(0, print_console, "^nA comissão da Copa Didi Libertadores agradece a participação!");
+  client_print(0, print_console, "Fim do jogo: %s", timestr);
+  client_print(0, print_console, "^n-----------------^n");
 }
 
 
