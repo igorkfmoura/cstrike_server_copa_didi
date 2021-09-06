@@ -28,7 +28,7 @@ lonewolf implementou:
 #pragma semicolon 1
 
 #define PLUGIN  "ep1c-CTF-Dispenser"
-#define VERSION "#1.0.6.4"
+#define VERSION "#1.0.6.5"
 #define AUTHOR  "tuty + lonewolf"
 
 
@@ -214,12 +214,15 @@ public CommandDispenserBuild( id )
 		return PLUGIN_CONTINUE;
 	}
 
-	if( bDispenserBuild[ id ] == true )
+	if( bDispenserBuild[ id ] == true && is_valid_ent( gUserDispenser[ id ] ) )
 	{
 		client_print_color(id, print_team_default, "%s Você já tem um ^3Dispenser^1 construido!", PREFIX_CHAT );
 
 		return PLUGIN_HANDLED;
 	}
+
+	bDispenserBuild[ id ] = false;
+	gUserDispenser[ id ] = 0;
 
 	if( !( pev( id, pev_flags ) & FL_ONGROUND ) )
 	{
@@ -440,8 +443,11 @@ public CommandSay( id )
 			return PLUGIN_HANDLED;
 		}
 
+		if ( is_valid_ent( gUserDispenser[ id ] ) )
+		{
+			client_print_color(id, print_team_default, "%s Você^1 destruiu seu próprio ^4Dispenser^1.", PREFIX_CHAT );
+		}
 		DestroyDispenser( id );
-		client_print_color(id, print_team_default, "%s Você^1 destruiu seu próprio ^4Dispenser^1.", PREFIX_CHAT );
 	}
 
 	return PLUGIN_HANDLED;
@@ -449,7 +455,10 @@ public CommandSay( id )
 
 DestroyDispenser( id )
 {
-	set_pev( gUserDispenser[ id ], pev_flags, pev( gUserDispenser[ id ], pev_flags ) | FL_KILLME );
+	if ( is_valid_ent( gUserDispenser[ id ] ) )
+	{
+		set_pev( gUserDispenser[ id ], pev_flags, pev( gUserDispenser[ id ], pev_flags ) | FL_KILLME );
+	}
 	bDispenserBuild[ id ] = false;
 	gUserDispenser[ id ] = 0;
 }
