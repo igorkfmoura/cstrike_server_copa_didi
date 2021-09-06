@@ -101,7 +101,7 @@ new const WEAPONBOX[] =                    "weaponbox"
 new const PLAYER[] =                    "player"
 
 // Itens
-new const FLAG_MODEL[] =                "models/copadidi/flag_copa_02.mdl"
+new const FLAG_MODEL[] =                "models/copadidi/flag_copa_05.mdl"
 new const ITEM_MODEL_AMMO[] =            "models/w_chainammo.mdl"
 new const ITEM_MODEL_MEDKIT[] =            "models/w_medkit.mdl"
 new const SND_GETAMMO[] =                "items/9mmclip1.wav"
@@ -187,7 +187,7 @@ enum (+= 64)
 {
     TASK_RESPAWN = 64,
     TASK_PROTECTION,
-	TASK_DAMAGEPROTECTION,
+    TASK_DAMAGEPROTECTION,
     TASK_EQUIPAMENT,
     TASK_PUTINSERVER,
     TASK_TEAMBALANCE,
@@ -903,7 +903,8 @@ public plugin_init()
     register_clcmd("ctf_moveflag", "admin_cmd_moveFlag", ADMIN_RCON, "<red/blue> - Moves team's flag base to your origin (for map management)")
     register_clcmd("ctf_save", "admin_cmd_saveFlags", ADMIN_RCON)
     register_clcmd("ctf_return", "admin_cmd_returnFlag", ADMIN_RETURN)
-    register_clcmd("ctf_update", "admin_cmd_updateFlag", ADMIN_RETURN);
+    // register_clcmd("ctf_update", "admin_cmd_updateFlag", ADMIN_RETURN);
+    register_concmd("ctf_update", "admin_cmd_updateFlag", ADMIN_RETURN);
 
     register_clcmd("dropflag", "player_cmd_dropFlag")
 
@@ -974,11 +975,11 @@ public plugin_init()
     pCvar_ctf_flagreturn      = register_cvar("ctf_flagreturn", "120")
     pCvar_ctf_respawntime     = register_cvar("ctf_respawntime", "5")
     pCvar_ctf_protection      = register_cvar("ctf_protection", "7")
-    pCvar_ctf_glows           = register_cvar("ctf_glow", "1")
+    pCvar_ctf_glows           = register_cvar("ctf_glow", "0")
     pCvar_ctf_weaponstay      = register_cvar("ctf_weaponstay", "3")
     pCvar_ctf_spawnmoney      = register_cvar("ctf_spawnmoney", "3500")
     pCvar_ctf_itempercent     = register_cvar("ctf_itempercent", "5")
-    pCvar_ctf_blockkill       = register_cvar("ctf_blockkill", "0");
+    pCvar_ctf_blockkill       = register_cvar("ctf_blockkill", "1");
     pCvar_ctf_team_a          = register_cvar("ctf_team_a", "0");
     pCvar_ctf_team_b          = register_cvar("ctf_team_b", "0");
 
@@ -1054,14 +1055,14 @@ public plugin_cfg()
     flag_spawn(TEAM_BLUE)
 
 
-    // task_set(6.5, "plugin_postCfg")
+    task_set(5.0, "plugin_postCfg")
 }
 public plugin_postCfg()
 {
     
-    // new cfg_dir[32]
-    // get_configsdir(cfg_dir, charsmax(cfg_dir))
-    // server_cmd("exec %s/amxx.cfg", cfg_dir)
+    new cfg_dir[32]
+    get_configsdir(cfg_dir, charsmax(cfg_dir))
+    server_cmd("exec %s/amxx.cfg", cfg_dir)
     
     // set_cvar_num("mp_freezetime", 0)
     // set_cvar_num("mp_limitteams", 0)
@@ -1087,8 +1088,8 @@ public plugin_natives()
     // Natives
     register_native("jctf_get_team", "native_get_team")
     register_native("jctf_get_flagcarrier", "native_get_flagcarrier")
-    register_native("jctf_get_adrenaline", "native_get_adrenaline")
-    register_native("jctf_add_adrenaline", "native_add_adrenaline")
+    register_native("get_user_adrenaline", "native_get_adrenaline")
+    register_native("set_user_adrenaline", "native_set_adrenaline")
     register_native("jctf_buy_itens", "native_buy_itens")
 }
 public plugin_end()
@@ -1190,28 +1191,20 @@ public native_get_adrenaline(iPlugin, iParams)
 
 #endif // FEATURE_ADRENALINE
 }
-public native_add_adrenaline(iPlugin, iParams)
+public native_set_adrenaline(iPlugin, iParams)
 {
 #if FEATURE_ADRENALINE == true
 
     /* jctf_add_adrenaline(id, iAdd, szReason[]) */
 
     // Vars
-    new id = get_param(1), iAdd = get_param(2), szReason[64];
+    new id = get_param(1), iAdr = get_param(2)
 
     // Verificação
     if(!is_user_connected(id))
         return 0;
-
-    // String
-    get_string(3, szReason, charsmax(szReason))
-
-    if(strlen(szReason)) player_award(id, 0, 0, iAdd, szReason)
-    else
-    {
-        // Adrenalina
-        g_iAdrenaline[id] = clamp(g_iAdrenaline[id] + iAdd, 0, 100)
-    }
+    
+    g_iAdrenaline[id] = clamp(iAdr, 0, 100)
 
     // Return
     return g_iAdrenaline[id]
@@ -1926,6 +1919,8 @@ public player_spawn(id)
 
     g_bAlreadySelectedGun[id] = false;
     xSelectGuns(id);
+
+    player_updateSpeed(id);
 }
 
 public xSelectGuns(id)
@@ -1988,7 +1983,8 @@ public _xSelectGuns(id, menu, item)
     // }
 
     g_bAlreadySelectedGun[id] = true;
-    give_item(id, xGunsPrimary[ xAction[id]][xGunGiveId])
+    //give_item(id, xGunsPrimary[ xAction[id]][xGunGiveId])
+    rg_give_item(id, xGunsPrimary[ xAction[id]][xGunGiveId], GT_REPLACE);
     cs_set_user_bpammo(id, xGunsPrimary[ xAction[id]][xGunGiveCSW], xGunsPrimary[ xAction[id]][xAmmoBackPack])
 }
 
@@ -2079,23 +2075,37 @@ public player_removeProtection(id, szLang[])
 }
 public player_currentWeapon(id)
 {
-    if(!g_bAlive[id])
-        return
-
     static bool:bZoom[33]
+
+    if(!g_bAlive[id])
+    {
+        bZoom[id] = false;
+        return;
+    }
 
     new iZoom = read_data(1)
 
     if(1 < iZoom <= 90) /* setFOV event */
-        bZoom[id] = bool:(iZoom <= 40)
-
+    {
+        bZoom[id] = bool:(iZoom <= 40);
+    }
     else /* CurWeapon event */
     {
         if(!bZoom[id]) /* if not zooming, get weapon speed */
+        {
             g_fWeaponSpeed[id] = g_fWeaponRunSpeed[read_data(2)]
-
+        }
         else /* if zooming, set zoom speed */
-            g_fWeaponSpeed[id] = g_fWeaponRunSpeed[0]
+        {
+            if (g_fWeaponRunSpeed[read_data(2)] >= 260.0) // gambiarra scout
+            {
+                g_fWeaponSpeed[id] = 210.0;
+            }
+            else
+            {
+                g_fWeaponSpeed[id] = g_fWeaponRunSpeed[0];
+            }
+        }
 
         player_updateSpeed(id)
     }
@@ -2179,16 +2189,16 @@ public player_useWeaponSec(ent)
 public player_damage(id, iWeapon, iAttacker, Float:fDamage, iType)
 {
     if(g_bProtected[id])
-	{
-		// player_updateRender(id, fDamage)
+    {
+        // player_updateRender(id, fDamage)
 
-		// task_remove(id - TASK_DAMAGEPROTECTION)
-		// task_set(0.1, "player_damageProtection", id - TASK_DAMAGEPROTECTION)
+        // task_remove(id - TASK_DAMAGEPROTECTION)
+        // task_set(0.1, "player_damageProtection", id - TASK_DAMAGEPROTECTION)
 
-		entity_set_vector(id, EV_VEC_punchangle, FLAG_SPAWN_ANGLES)
+        entity_set_vector(id, EV_VEC_punchangle, FLAG_SPAWN_ANGLES)
 
-		return HAM_SUPERCEDE
-	}
+        return HAM_SUPERCEDE
+    }
 
 #if FEATURE_ADRENALINE == true
     if(1 <= iAttacker <= g_iMaxPlayers && g_iAdrenalineUse[iAttacker] == ADRENALINE_BERSERK && get_user_team(iAttacker) != get_user_team(id))
@@ -2220,10 +2230,10 @@ public player_damage(id, iWeapon, iAttacker, Float:fDamage, iType)
 
 public player_damageProtection(id)
 {
-	id += TASK_DAMAGEPROTECTION
+    id += TASK_DAMAGEPROTECTION
 
-	if(g_bAlive[id])
-		player_updateRender(id)
+    if(g_bAlive[id])
+        player_updateRender(id)
 }
 
 
@@ -2801,7 +2811,7 @@ public player_adrenalineDrain(id)
                 new iHealth = get_user_health(id)
 
                 if(iHealth < (g_iMaxHealth[id] + REGENERATE_EXTRAHP))
-                    set_user_health(id, min(iHealth + 3, g_iMaxHealth[id] + REGENERATE_EXTRAHP))
+                    set_user_health(id, min(iHealth + 5, g_iMaxHealth[id] + REGENERATE_EXTRAHP))
 
                 else
                 {
@@ -2983,20 +2993,23 @@ public admin_cmd_returnFlag(id, level, cid)
 
 public admin_cmd_updateFlag(id)
 {
-    if (!is_user_connected(id))
-    {
-        return PLUGIN_HANDLED;
-    }
-
     new tmp;
 
     tmp = TEAM_RED + (get_pcvar_num(pCvar_ctf_team_a) * 2);
-    console_print(id, "[admin_cmd_updateFlag] skin_tr: %d", tmp);
     entity_set_int(g_iFlagEntity[TEAM_RED], EV_INT_skin, tmp);
 
+    if (is_user_connected(id))
+    {
+        console_print(id, "[admin_cmd_updateFlag] skin_tr: %d", tmp);
+    }
+
     tmp = TEAM_BLUE + (get_pcvar_num(pCvar_ctf_team_b) * 2);
-    console_print(id, "[admin_cmd_updateFlag] skin_ct: %d", tmp);
     entity_set_int(g_iFlagEntity[TEAM_BLUE], EV_INT_skin, tmp);
+
+    if (is_user_connected(id))
+    {
+        console_print(id, "[admin_cmd_updateFlag] skin_ct: %d", tmp);
+    }
 
     return PLUGIN_HANDLED;
 }
@@ -3676,87 +3689,87 @@ public player_buyWeapon(id, iWeapon)
         }
 
         case W_FLASHBANG:
-		{
-			new iGrenades = cs_get_user_bpammo(id, W_FLASHBANG)
+        {
+            new iGrenades = cs_get_user_bpammo(id, W_FLASHBANG)
 
-			if(iGrenades >= 2)
-			{
-				client_print(id, print_center, "%L", id, "BUY_NOMORE_FLASH")
-				return
-			}
+            if(iGrenades >= 2)
+            {
+                client_print(id, print_center, "%L", id, "BUY_NOMORE_FLASH")
+                return
+            }
 
-			new iCvar = get_pcvar_num(pCvar_ctf_nospam_flash)
+            new iCvar = get_pcvar_num(pCvar_ctf_nospam_flash)
 
-			if (iCvar < 0)
-			{
-				client_print(id, print_center, "Proibido a compra de Flashbangs neste mapa!")
-				return
-			}
-			new Float:fGameTime = get_gametime()
-			if(g_fLastBuy[id][iGrenades] > fGameTime)
-			{
-				new fDelta = floatround(g_fLastBuy[id][iGrenades] - fGameTime);
-				client_print(id, print_center, "%L", id, "BUY_DELAY_FLASH", fDelta, (fDelta != 1 ? "s!" : "!"))
-				return
-			}
+            if (iCvar < 0)
+            {
+                client_print(id, print_center, "Proibido a compra de Flashbangs neste mapa!")
+                return
+            }
+            new Float:fGameTime = get_gametime()
+            if(g_fLastBuy[id][iGrenades] > fGameTime)
+            {
+                new fDelta = floatround(g_fLastBuy[id][iGrenades] - fGameTime);
+                client_print(id, print_center, "%L", id, "BUY_DELAY_FLASH", fDelta, (fDelta != 1 ? "s!" : "!"))
+                return
+            }
 
-			g_fLastBuy[id][iGrenades] = fGameTime + iCvar
+            g_fLastBuy[id][iGrenades] = fGameTime + iCvar
 
-			if(iGrenades == 1)
-				g_fLastBuy[id][0] = g_fLastBuy[id][iGrenades]
-		}
+            if(iGrenades == 1)
+                g_fLastBuy[id][0] = g_fLastBuy[id][iGrenades]
+        }
 
         case W_HEGRENADE:
-		{
-			if(cs_get_user_bpammo(id, W_HEGRENADE) >= 1)
-			{
-				client_print(id, print_center, "%L", id, "BUY_NOMORE_HE")
-				return
-			}
+        {
+            if(cs_get_user_bpammo(id, W_HEGRENADE) >= 1)
+            {
+                client_print(id, print_center, "%L", id, "BUY_NOMORE_HE")
+                return
+            }
 
-			new iCvar = get_pcvar_num(pCvar_ctf_nospam_he)
+            new iCvar = get_pcvar_num(pCvar_ctf_nospam_he)
 
-			if (iCvar < 0)
-			{
-				client_print(id, print_center, "Proibido a compra de Granadas neste mapa!")
-				return
-			}
-			new Float:fGameTime = get_gametime()
-			if(g_fLastBuy[id][2] > fGameTime)
-			{
-				new fDelta = floatround(g_fLastBuy[id][2] - fGameTime);
-				client_print(id, print_center, "%L", id, "BUY_DELAY_HE", fDelta, (fDelta != 1 ? "s!" : "!"))
-				return
-			}
+            if (iCvar < 0)
+            {
+                client_print(id, print_center, "Proibido a compra de Granadas neste mapa!")
+                return
+            }
+            new Float:fGameTime = get_gametime()
+            if(g_fLastBuy[id][2] > fGameTime)
+            {
+                new fDelta = floatround(g_fLastBuy[id][2] - fGameTime);
+                client_print(id, print_center, "%L", id, "BUY_DELAY_HE", fDelta, (fDelta != 1 ? "s!" : "!"))
+                return
+            }
 
-			g_fLastBuy[id][2] = fGameTime + iCvar
-		}
+            g_fLastBuy[id][2] = fGameTime + iCvar
+        }
 
-		case W_SMOKEGRENADE:
-		{
-			if(cs_get_user_bpammo(id, W_SMOKEGRENADE) >= 1)
-			{
-				client_print(id, print_center, "%L", id, "BUY_NOMORE_SMOKE")
-				return
-			}
+        case W_SMOKEGRENADE:
+        {
+            if(cs_get_user_bpammo(id, W_SMOKEGRENADE) >= 1)
+            {
+                client_print(id, print_center, "%L", id, "BUY_NOMORE_SMOKE")
+                return
+            }
 
-			new iCvar = get_pcvar_num(pCvar_ctf_nospam_smoke)
+            new iCvar = get_pcvar_num(pCvar_ctf_nospam_smoke)
 
-			if (iCvar < 0)
-			{
-				client_print(id, print_center, "Proibido a compra de Granadas de Gelo neste mapa!")
-				return
-			}
-			new Float:fGameTime = get_gametime()
-			if(g_fLastBuy[id][3] > fGameTime)
-			{
-				new fDelta = floatround(g_fLastBuy[id][3] - fGameTime);
-				client_print(id, print_center, "%L", id, "BUY_DELAY_SMOKE", fDelta, (fDelta != 1 ? "s!" : "!"))
-				return
-			}
+            if (iCvar < 0)
+            {
+                client_print(id, print_center, "Proibido a compra de Granadas de Gelo neste mapa!")
+                return
+            }
+            new Float:fGameTime = get_gametime()
+            if(g_fLastBuy[id][3] > fGameTime)
+            {
+                new fDelta = floatround(g_fLastBuy[id][3] - fGameTime);
+                client_print(id, print_center, "%L", id, "BUY_DELAY_SMOKE", fDelta, (fDelta != 1 ? "s!" : "!"))
+                return
+            }
 
-			g_fLastBuy[id][3] = fGameTime + iCvar
-		}
+            g_fLastBuy[id][3] = fGameTime + iCvar
+        }
     }
 
     if(1 <= g_iWeaponSlot[iWeapon] <= 2)
@@ -4394,15 +4407,15 @@ public player_hudAdrenaline(id)
     if(szHudsADR[id])
     {
         if(g_iAdrenaline[id] >= 100)
-		{
-			set_hudmessage(HUD_ADRENALINEFULL);
-			ShowSyncHudMsg(id, g_iSync[0], "%L", id, "HUD_ADRENALINEFULL")
-		}
+        {
+            set_hudmessage(HUD_ADRENALINEFULL);
+            ShowSyncHudMsg(id, g_iSync[0], "%L", id, "HUD_ADRENALINEFULL")
+        }
         else 
-		{
-			set_hudmessage(HUD_ADRENALINE);
-			ShowSyncHudMsg(id, g_iSync[0], "%L", id, "HUD_ADRENALINE", g_iAdrenaline[id], 100)
-		}
+        {
+            set_hudmessage(HUD_ADRENALINE);
+            ShowSyncHudMsg(id, g_iSync[0], "%L", id, "HUD_ADRENALINE", g_iAdrenaline[id], 100)
+        }
     }
 }
 
@@ -4657,23 +4670,17 @@ player_updateRender(id, Float:fDamage = 0.0)
     }*/
 
     // Render
-    fm_set_rendering(id, iEffect, iColor[0], iColor[1], iColor[2], iMode, 10)
+    fm_set_rendering(id, iEffect, iColor[0], iColor[1], iColor[2], iMode, 17)
 }
 player_updateSpeed(id)
 {
-    if (!is_user_connected(id) || !is_user_alive(id))
+    if (!is_user_connected(id) || !is_user_alive(id) || cannot_move)
     {
         return;
     }
-
-    new flags = entity_get_int(id, EV_INT_flags);    
-    if (flags & FL_FROZEN || cannot_move)
-    {
-        return;
-    }
-
+ 
     // Float
-    new Float:fSpeed = 1.0
+    new Float:fSpeed = 1.0;
 
     // Has Flag
     if(player_hasFlag(id))
@@ -4682,7 +4689,6 @@ player_updateSpeed(id)
 // FEATURE_ADRENALINE
 #if FEATURE_ADRENALINE == true
     if(g_iAdrenalineUse[id] == ADRENALINE_SPEED) fSpeed *= SPEED_ADRENALINE;
-
 #endif 
 
     // SPED
