@@ -101,7 +101,7 @@ new const WEAPONBOX[] =                    "weaponbox"
 new const PLAYER[] =                    "player"
 
 // Itens
-new const FLAG_MODEL[] =                "models/copadidi/flag_copa_05.mdl"
+new const FLAG_MODEL[] =                "models/copadidi/flag_copa_06.mdl"
 new const ITEM_MODEL_AMMO[] =            "models/w_chainammo.mdl"
 new const ITEM_MODEL_MEDKIT[] =            "models/w_medkit.mdl"
 new const SND_GETAMMO[] =                "items/9mmclip1.wav"
@@ -905,6 +905,7 @@ public plugin_init()
     register_clcmd("ctf_return", "admin_cmd_returnFlag", ADMIN_RETURN)
     // register_clcmd("ctf_update", "admin_cmd_updateFlag", ADMIN_RETURN);
     register_concmd("ctf_update", "admin_cmd_updateFlag", ADMIN_RETURN);
+    register_concmd("ctf_setscore", "admin_cmd_setScore", ADMIN_RCON);
 
     register_clcmd("dropflag", "player_cmd_dropFlag")
 
@@ -3014,6 +3015,62 @@ public admin_cmd_updateFlag(id)
     return PLUGIN_HANDLED;
 }
 
+public admin_cmd_setScore(id, level, cid)
+{
+    new szTeam[2]
+    if(!cmd_access(id, level, cid, 2))
+        return PLUGIN_HANDLED
+
+
+    read_argv(1, szTeam, charsmax(szTeam))
+
+    new iTeam = str_to_num(szTeam)
+
+    if(!(TEAM_RED <= iTeam <= TEAM_BLUE))
+    {
+        switch(szTeam[0])
+        {
+            case 'r', 'R': iTeam = 1
+            case 'b', 'B': iTeam = 2
+        }
+    }
+
+    if(!(TEAM_RED <= iTeam <= TEAM_BLUE))
+        return PLUGIN_HANDLED
+
+    new szScore[6];
+    new iScore;
+
+    read_argv(2, szScore, charsmax(szScore));
+    iScore = str_to_num(szScore);
+    if (!iScore && szScore[0])
+    {
+        server_print("%s Failed. iTeam: %d, szScore: %s, iScore: %d", CONSOLE_PREFIX, iTeam, szScore, iScore)
+        return PLUGIN_HANDLED;
+    }
+
+    new szName[32]
+    new szSteam[48]
+
+    get_user_name(id, szName, charsmax(szName))
+    get_user_authid(id, szSteam, charsmax(szSteam))
+
+    log_amx("Admin %s<%s><%s> set %s's score to %d", szName, szSteam, g_szTeamName[get_user_team(id)], g_szTeamName[iTeam], iScore);
+    client_print_color(0, id, "%s Admin ^3%s^1 set ^4%s^1's score to ^4%d^1", PREFIX, szName, g_szTeamName[get_user_team(id)], iScore);
+
+    set_member_game((iTeam == TEAM_BLUE) ? m_iNumCTWins : m_iNumTerroristWins, iScore);
+
+    emessage_begin(MSG_BROADCAST, gMsg_TeamScore)
+    ewrite_string(g_szCSTeams[iTeam])
+    ewrite_short(iScore)
+    emessage_end()
+
+    // show_activity_key("ADMIN_MOVEBASE_1", "ADMIN_MOVEBASE_2", szName, LANG_PLAYER, g_szMLFlagTeam[iTeam])
+
+    // client_print(id, print_console, "%s %L", CONSOLE_PREFIX, id, "ADMIN_MOVEBASE_MOVED", id, g_szMLFlagTeam[iTeam])
+
+    return PLUGIN_HANDLED
+}
 
 #if FEATURE_BUY == true
 public player_inBuyZone(id)
