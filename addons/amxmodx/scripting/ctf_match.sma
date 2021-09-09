@@ -3,7 +3,7 @@
 #include <jctf>
 
 #define PLUGIN  "CTF Match"
-#define VERSION "0.5"
+#define VERSION "0.5.1"
 #define AUTHOR  "lonewolf"
 
 #define TASKID_CLIENT_CMD 9352
@@ -86,8 +86,14 @@ new countdown;
 
 new motd_buffer[1024];
 
+new msg_TeamScore;
+new msg_ScoreInfo;
 // new msg_CurWeapon; 
 new cvar_knife;
+
+new kills[MAX_PLAYERS + 1];
+new deaths[MAX_PLAYERS + 1];
+new wins[TeamName];
 
 public plugin_init()
 {
@@ -109,6 +115,9 @@ public plugin_init()
 
   cvar_knife = create_cvar("match_knife", "0");
   register_event("CurWeapon", "event_CurWeapon", "b", "1=1", "2!29"); // todo: unregister hook
+  
+  msg_ScoreInfo = get_user_msgid("ScoreInfo");
+  msg_TeamScore = get_user_msgid("TeamScore");
 }
 
 
@@ -147,13 +156,13 @@ public menu_ctf(id)
   menu_additem(menu, (get_cvar_num("mp_freezetime") == 1337) ? "\rDestravar times" : "Travar times na base");
   menu_additem(menu, (get_cvar_num("match_knife") == 0) ? "Iniciar Round Faca" : "\rFinalizar Round Faca");
   menu_additem(menu, "Insta Restart round");
-  formatex(item, charsmax(item), "Complete Reset: %s", onoff[complete_reset]);
-  menu_additem(menu, item);
+  // formatex(item, charsmax(item), "Complete Reset: %s", onoff[complete_reset]);
+  // menu_additem(menu, item);
+  menu_addblank2(menu);
 
   menu_additem(menu, "Inverter times");
   menu_additem(menu, "Forçar fim de round");
-  // menu_additem(menu, "Tirar Faca");
-
+  
   menu_display(id, menu);
 }
 
@@ -187,20 +196,22 @@ public menu_ctf_handler(id, menu, item)
     }
     case 2:
     {
-      set_dhudmessage(255, 255, 255, -1.0, 0.29, 2, 6.0, 6.0);
+      set_hudmessage(255, 255, 255, -1.0, 0.29, 1, 6.0, 6.0);
 
       if (get_cvar_num("mp_freezetime") == 1337)
       {
         set_cvar_num("mp_freezetime", 0);
-        show_dhudmessage(0, "TIMES DESTRAVADOS");
+        show_hudmessage(0, "TIMES DESTRAVADOS");
       }
       else
       {
         set_cvar_num("mp_freezetime", 1337);
-        show_dhudmessage(0, "TIMES TRAVADOS NA BASE");
+        show_hudmessage(0, "TIMES TRAVADOS NA BASE");
       }
 
-      rg_restart_round();
+      // rg_restart_round();
+      // elog_message("World triggered ^"Round_End^"^n");
+      server_cmd("sv_restart 1");
       client_cmd(0, "spk deeoo");
 
     }
@@ -211,45 +222,68 @@ public menu_ctf_handler(id, menu, item)
         set_cvar_num("mp_freezetime", 15);
         set_cvar_num("mp_forcerespawn", 0);
         set_cvar_num("match_knife", 1);
-        
-        rg_restart_round();
-        client_cmd(0, "spk deeoo");
+        set_cvar_num("dispenser_enabled", 0);
+        set_cvar_string("mp_round_infinite", "bcdeghijk");
+        set_cvar_num("amx_knife_rr", 0);
 
-        set_dhudmessage(255, 255, 255, -1.0, 0.29, 2, 6.0, 6.0);
-        show_dhudmessage(0, "ROUND FACA SEM RESPAWN");
+        // rg_restart_round();
+        // elog_message("World triggered ^"Round_End^"^n");
+        server_cmd("sv_restart 1");
+
+        client_cmd(0, "spk deeoo");
+        
+        new Float:freezetime = float(get_cvar_num("mp_freezetime"));
+        set_task(freezetime + 1.0, "task_freezetime_delayed");
+
+        set_hudmessage(255, 255, 255, -1.0, 0.29, 1, 6.0, 6.0);
+        show_hudmessage(0, "ROUND FACA SEM RESPAWN");
       }
       else
       {
         set_cvar_num("mp_freezetime", 1337);
         set_cvar_num("mp_forcerespawn", 5);
         set_cvar_num("match_knife", 0);
-        
-        rg_restart_round();
+        set_cvar_num("dispenser_enabled", 1);
+        set_cvar_string("mp_round_infinite", "bcdefghijk");
+        set_cvar_num("amx_knife_rr", 1);
+
+        // rg_restart_round();
+        // elog_message("World triggered ^"Round_End^"^n");
+        server_cmd("sv_restart 1");
         client_cmd(0, "spk deeoo");
 
-        set_dhudmessage(255, 255, 255, -1.0, 0.29, 2, 6.0, 6.0);
-        show_dhudmessage(0, "FIM DO ROUND FACA");
+        set_hudmessage(255, 255, 255, -1.0, 0.29, 1, 6.0, 6.0);
+        show_hudmessage(0, "FIM DO ROUND FACA");
       }
     }
     case 4:
     {
-      rg_restart_round();
+      // set_member_game(m_bCompleteReset, true);
+      // rg_restart_round();
+      // elog_message("World triggered ^"Round_End^"^n");
+
+      server_cmd("sv_restart 1");
       client_cmd(0, "spk deeoo");
 
-      client_print(0, print_center, "Restarting...");
+      // client_print(0, print_center, "Restarting...");
     }
-    case 5:
-    {
-      new bool:complete_reset = get_member_game(m_bCompleteReset);
-      set_member_game(m_bCompleteReset, !complete_reset);
-    }
+    // case 5:
+    // {
+    //   new bool:complete_reset = get_member_game(m_bCompleteReset);
+    //   set_member_game(m_bCompleteReset, !complete_reset);
+    // }
     case 6:
     {
       rg_swap_all_players();
+      proper_swap_config();
     }
     case 7:
     {
       countdown = 0;
+      if (get_member_game(m_bFreezePeriod))
+      {
+        event_countdown(countdown_ent);
+      }
     }
   }
 
@@ -257,6 +291,13 @@ public menu_ctf_handler(id, menu, item)
   menu_ctf(id);
   return PLUGIN_HANDLED;
 }
+
+
+public task_freezetime_delayed(id)
+{
+  set_cvar_num("mp_freezetime", 1337);
+}
+
 
 public jctf_flag(event, id, flagteam, bool:is_assist)
 {
@@ -292,7 +333,7 @@ public jctf_flag(event, id, flagteam, bool:is_assist)
     countdown = 0;
   }
 
-  client_print(0, print_chat, "[jctf_flag] flagteam: %d, clan: %s, points: %d, max: %d", flagteam, clans[t], points, max)
+  // client_print(0, print_chat, "[jctf_flag] flagteam: %d, clan: %s, points: %d, max: %d", flagteam, clans[t], points, max)
 }
 
 public event_OnRoundFreezeEnd(id)
@@ -355,7 +396,6 @@ public event_countdown(ent)
 
     if (match[CTF_IS_1STHALF])
     {
-      rg_swap_all_players();
       
       new bool:complete_reset = get_member_game(m_bCompleteReset);
 
@@ -368,74 +408,36 @@ public event_countdown(ent)
           continue;
         }
 
-        user_silentkill(id);
-        set_user_adrenaline(id, 0);
-        rg_add_account(id, startmoney, AS_SET);
+        new TeamName:team = get_member(id, m_iTeam);
+        if (team == TEAM_TERRORIST || team == TEAM_CT)
+        {
+          kills[id]  = floatround(get_entvar(id, var_frags));
+          deaths[id] = get_member(id, m_iDeaths);
+        
+          // user_silentkill(id);
+          set_user_adrenaline(id, 0);
+          rg_add_account(id, startmoney, AS_SET);
+        }
         // client_cmd(id, "say /destroy"); // ... for when you gaze long into the abyss. The abyss gazes also into you.
       }
 
-      new a = get_cvar_num("ctf_team_a");
-      new b = get_cvar_num("ctf_team_b");
+      rg_swap_all_players();
 
-      new placedmodels_a[12];
-      new placedmodels_b[12];
-      new count_a = 0;
-      new count_b = 0;
+      wins[TEAM_TERRORIST] = get_member_game(m_iNumTerroristWins);
+      wins[TEAM_CT]        = get_member_game(m_iNumCTWins);
 
-      new ent = MaxClients + 1;
-      while ((ent = rg_find_ent_by_class(ent, "NiceDispenser:D")))
-      {
-        if (is_entity(ent))
-        {
-          set_entvar(ent, var_flags, get_entvar(ent, var_flags) | FL_KILLME);
-        }
-      }
+      proper_swap_config();
 
-      ent = MaxClients + 1;
-      while ((ent = rg_find_ent_by_class(ent, "placedmodel")))
-      {
-        new skin = get_entvar(ent, var_skin);
-        if (skin == a)
-        {
-          placedmodels_a[count_a++] = ent;
-        }
-        else if (skin == b)
-        {
-          placedmodels_b[count_b++] = ent;
-        }
-      }
-
-      new i;
-      for (i = 0; i < count_a; ++i)
-      {
-        if (is_entity(placedmodels_a[i]))
-        {
-          set_entvar(placedmodels_a[i], var_skin, b);
-        }
-      }
-      for (i = 0; i < count_b; ++i)
-      {
-        if (is_entity(placedmodels_b[i]))
-        {
-          set_entvar(placedmodels_b[i], var_skin, a);
-        }
-      }
-
-      set_cvar_num("ctf_team_a", b);
-      set_cvar_num("ctf_team_b", a);
-
-      server_cmd("ctf_update");
-
-      
       client_cmd(0, "spk deeoo")
 
-      set_dhudmessage(255, 255, 255, -1.0, 0.29, 1, 6.0, 6.0);
-      show_dhudmessage(0, "TROCA DE LADO, VALENDO!");
+      set_hudmessage(255, 255, 255, -1.0, 0.29, 1, 6.0, 6.0);
+      show_hudmessage(0, "TROCA DE LADO, VALENDO!");
 
-      set_member_game(m_bCompleteReset, false);
-      rg_restart_round();
-      set_member_game(m_bCompleteReset, complete_reset);
-  
+      // set_member_game(m_bCompleteReset, true);
+      // rg_restart_round();
+      // elog_message("World triggered ^"Round_End^"^n");
+      server_cmd("sv_restart 1");
+
       match[CTF_IS_1STHALF] = 0;
       match[CTF_IS_2NDHALF] = 1;
       
@@ -456,7 +458,55 @@ public event_countdown(ent)
   return HC_CONTINUE;
 }
 
+public proper_swap_config()
+{
+  new a = get_cvar_num("ctf_team_a");
+  new b = get_cvar_num("ctf_team_b");
+  new placedmodels_a[12];
+  new placedmodels_b[12];
+  new count_a = 0;
+  new count_b = 0;
+  new ent = MaxClients + 1;
 
+  while ((ent = rg_find_ent_by_class(ent, "NiceDispenser:D")))
+  {
+    if (is_entity(ent))
+    {
+      set_entvar(ent, var_flags, get_entvar(ent, var_flags) | FL_KILLME);
+    }
+  }
+  ent = MaxClients + 1;
+  while ((ent = rg_find_ent_by_class(ent, "placedmodel")))
+  {
+    new skin = get_entvar(ent, var_skin);
+    if (skin == a)
+    {
+      placedmodels_a[count_a++] = ent;
+    }
+    else if (skin == b)
+    {
+      placedmodels_b[count_b++] = ent;
+    }
+  }
+  new i;
+  for (i = 0; i < count_a; ++i)
+  {
+    if (is_entity(placedmodels_a[i]))
+    {
+      set_entvar(placedmodels_a[i], var_skin, b);
+    }
+  }
+  for (i = 0; i < count_b; ++i)
+  {
+    if (is_entity(placedmodels_b[i]))
+    {
+      set_entvar(placedmodels_b[i], var_skin, a);
+    }
+  }
+  set_cvar_num("ctf_team_a", b);
+  set_cvar_num("ctf_team_b", a);
+  server_cmd("ctf_update");
+}
 public event_RestartRound(id)
 {
   // client_print_color(0, 0, "^4[event_RestartRound]^1 triggered");
@@ -475,8 +525,56 @@ public event_RestartRound(id)
     match[CTF_KNIFEROUND] = 0;
     match[CTF_IS_1STHALF] = 1;
   }
-
+  else if (match[CTF_IS_2NDHALF])
+  {
+    set_task(1.0, "task_updatescores_delayed");
+    // task_updatescores_delayed();
+  }
   return HC_CONTINUE;
+}
+
+
+public task_updatescores_delayed()
+{
+  // client_print(0, print_chat, "[event_RestartRound] match[CTF_IS_2NDHALF]")
+
+  set_member_game(m_iNumTerroristWins, wins[TEAM_TERRORIST]);
+  set_member_game(m_iNumCTWins, wins[TEAM_CT]);
+
+  for (new id = 1; id <= MaxClients; ++id)
+  {
+    if (!is_user_connected(id))
+    {
+      continue;
+    }
+    new TeamName:team = get_member(id, m_iTeam);
+    if (team == TEAM_TERRORIST || team == TEAM_CT)
+    {
+      set_entvar(id, var_frags, float(kills[id]));
+      set_member(id, m_iDeaths, deaths[id]);
+      
+      message_begin(MSG_BROADCAST, msg_ScoreInfo);
+      write_byte(id);
+      write_short(kills[id]);
+      write_short(deaths[id]);
+      write_short(0);
+      write_short(_:team);
+      message_end();
+
+      // client_print(0, print_chat, "[event_RestartRound] id: %d, kills: %d, deaths: %d", id, kills[id], deaths[id]);
+    }
+    // client_cmd(id, "say /destroy"); // ... for when you gaze long into the abyss. The abyss gazes also into you.
+  }
+
+  emessage_begin(MSG_BROADCAST, msg_TeamScore);
+  ewrite_string("TERRORIST");
+  ewrite_short(wins[TEAM_TERRORIST]);
+  emessage_end();
+
+  emessage_begin(MSG_BROADCAST, msg_TeamScore);
+  ewrite_string("CT");
+  ewrite_short(wins[TEAM_CT]);
+  emessage_end();
 }
 
 
@@ -520,24 +618,24 @@ public match_kniferound_end()
     }
   }
 
-  set_dhudmessage(255, 255, 255, -1.0, 0.29, 2, 6.0, 6.0);
+  set_hudmessage(255, 255, 255, -1.0, 0.29, 1, 6.0, 6.0);
 
   if (alives[TEAM_TERRORIST] > alives[TEAM_CT])
   {
     client_print_color(0, print_team_red, "%s Time ^3Terrorista^1 venceu o round faca!", CHAT_PREFIX)
-    show_dhudmessage(0, "Time Terrorista venceu o round faca!", configs[CTF_ROUNDTIME_KNIFE]);
+    show_hudmessage(0, "Time Terrorista venceu o round faca!", configs[CTF_ROUNDTIME_KNIFE]);
     match[CTF_KNIFEROUND_WINNER] = TEAM_TERRORIST;
   }
   else if (alives[TEAM_TERRORIST] < alives[TEAM_CT])
   {
     client_print_color(0, print_team_blue, "%s Time ^3CT^1 venceu o round faca!", CHAT_PREFIX)
-    show_dhudmessage(0, "Time CT venceu o round faca!", configs[CTF_ROUNDTIME_KNIFE]);
+    show_hudmessage(0, "Time CT venceu o round faca!", configs[CTF_ROUNDTIME_KNIFE]);
     match[CTF_KNIFEROUND_WINNER] = TEAM_TERRORIST;
   }
   else
   {
     client_print_color(0, print_team_blue, "%s Os times empataram o round faca!", CHAT_PREFIX)
-    show_dhudmessage(0, "Os times empataram o round faca!", configs[CTF_ROUNDTIME_KNIFE]);
+    show_hudmessage(0, "Os times empataram o round faca!", configs[CTF_ROUNDTIME_KNIFE]);
 
     match[CTF_KNIFEROUND_WINNER] = (random_num(0, 1)) ? TEAM_TERRORIST : TEAM_CT;
     if (match[CTF_KNIFEROUND_WINNER] == TEAM_TERRORIST)
@@ -570,7 +668,8 @@ public match_start()
 
   set_cvar_float("mp_freezetime", configs[CTF_FREEZETIME]);
   set_cvar_num("sv_alltalk", configs[CTF_ALLTALK]);
-  
+  set_cvar_num("amx_knife_rr", 1);
+
   match[CTF_STARTED]    = true;
   match[CTF_KNIFEROUND]   = configs[CTF_HAS_KNIFEROUND];
   match[CTF_KNIFEROUND_WINNER] = TEAM_UNASSIGNED;
@@ -581,8 +680,8 @@ public match_start()
   {
     set_cvar_float("mp_roundtime",  configs[CTF_ROUNDTIME_KNIFE]);
 
-    set_dhudmessage(255, 255, 255, -1.0, 0.29, 2, 6.0, 6.0);
-    show_dhudmessage(0, "ROUND FACA! SEM RESPAWN! %f", configs[CTF_ROUNDTIME_KNIFE]);
+    set_hudmessage(255, 255, 255, -1.0, 0.29, 1, 6.0, 6.0);
+    show_hudmessage(0, "ROUND FACA! SEM RESPAWN! %f", configs[CTF_ROUNDTIME_KNIFE]);
 
     set_cvar_string("mp_round_infinite", "bcdeghijk"); // Can end by team death;
     set_cvar_num("mp_forcerespawn", 0);
@@ -636,10 +735,6 @@ public generate_motd()
 {
   static buffer[128];
 
-  new kills[MAX_PLAYERS + 1];
-  new deaths[MAX_PLAYERS + 1];
-
-  new wins[TeamName];
   wins[TEAM_TERRORIST] = get_member_game(m_iNumTerroristWins);
   wins[TEAM_CT]        = get_member_game(m_iNumCTWins);
   
