@@ -457,7 +457,8 @@ DestroyDispenser( id )
 {
 	if ( is_valid_ent( gUserDispenser[ id ] ) )
 	{
-		set_pev( gUserDispenser[ id ], pev_flags, pev( gUserDispenser[ id ], pev_flags ) | FL_KILLME );
+		// set_pev( gUserDispenser[ id ], pev_flags, pev( gUserDispenser[ id ], pev_flags ) | FL_KILLME );
+		remove_entity( gUserDispenser[ id ] );
 	}
 	bDispenserBuild[ id ] = false;
 	gUserDispenser[ id ] = 0;
@@ -482,7 +483,8 @@ public bacon_TakeDamage( ent, idinflictor, idattacker, Float:damage, damagebits 
 			pev( ent, pev_origin, flOrigin );
 
 			UTIL_BreakModel( flOrigin, gMetalGibs, BREAK_COMPUTER );
-			set_pev( ent, pev_flags, pev( ent, pev_flags ) | FL_KILLME );
+			// set_pev( ent, pev_flags, pev( ent, pev_flags ) | FL_KILLME );
+			remove_entity(ent);
 
 			if( idattacker == iOwner )
 			{
@@ -786,10 +788,14 @@ stock UTIL_DestroyDispensers( )
 
 	while( ( iEnt = find_ent_by_class( iEnt, gDispenserClassname ) ) )
 	{
-		new iOwner = pev( iEnt, pev_iuser2 );
+		if ( is_valid_ent( iEnt ) )
+		{
+			new iOwner = pev( iEnt, pev_iuser2 );
 
-		bDispenserBuild[ iOwner ] = false;
-		set_pev( iEnt, pev_flags, pev( iEnt, pev_flags ) | FL_KILLME );
+			bDispenserBuild[ iOwner ] = false;
+			// set_pev( iEnt, pev_flags, pev( iEnt, pev_flags ) | FL_KILLME );
+			remove_entity(iEnt);
+		}
 	}
 }
 
