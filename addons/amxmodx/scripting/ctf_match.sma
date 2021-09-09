@@ -10,14 +10,6 @@
 
 new const CHAT_PREFIX[] = "^4[CTF Match]^1";
 
-// new const team_names[TeamName][] = 
-// {
-//   "", 
-//   "TIME A", 
-//   "TIME B", 
-//   "SPEC"
-// };
-
 new const clans[][] =
   {
     "All Stars",
@@ -66,7 +58,6 @@ new const CONFIGS_DEFAULT[CTFMatchConfig] =
   2,
 };
 
-
 enum _:CTFMatch
 {
   CTF_STARTED,
@@ -110,7 +101,6 @@ public plugin_init()
   }
 
   RegisterHookChain(RG_CSGameRules_OnRoundFreezeEnd, "event_OnRoundFreezeEnd");
-  RegisterHookChain(RG_RoundEnd, "event_RoundEnd"); 
   RegisterHookChain(RG_CSGameRules_RestartRound, "event_RestartRound");
 
   cvar_knife = create_cvar("match_knife", "0");
@@ -144,13 +134,7 @@ public cmd_test(id)
 public menu_ctf(id)
 {
   new menu = menu_create("CTF Menu", "menu_ctf_handler");
-  // client_print_color(id, id, "now: %f", get_gametime());
 
-  new bool:complete_reset = get_member_game(m_bCompleteReset);
-  new const onoff[2][16] = {"\rDesativado", "\yAtivado"};
-
-  static item[64];
-  
   menu_additem(menu, match[CTF_STARTED] ? "\rFinalizar partida" : "Iniciar partida");
   menu_additem(menu, "\dConfigurar partida");
   menu_additem(menu, (get_cvar_num("mp_freezetime") == 1337) ? "\rDestravar times" : "Travar times na base");
@@ -387,18 +371,9 @@ public event_countdown(ent)
 
   if (countdown <= 0)
   {
-    if (match[CTF_KNIFEROUND])
-    {
-      match_kniferound_end();
-
-      return HC_CONTINUE;
-    }
-
     if (match[CTF_IS_1STHALF])
     {
       
-      new bool:complete_reset = get_member_game(m_bCompleteReset);
-
       new startmoney = get_cvar_num("mp_startmoney");
 
       for (new id = 1; id <= MaxClients; ++id)
@@ -478,6 +453,10 @@ public proper_swap_config()
   ent = MaxClients + 1;
   while ((ent = rg_find_ent_by_class(ent, "placedmodel")))
   {
+    if (!is_entity(ent))
+    {
+      continue;
+    }
     new skin = get_entvar(ent, var_skin);
     if (skin == a)
     {
@@ -575,87 +554,6 @@ public task_updatescores_delayed()
   ewrite_string("CT");
   ewrite_short(wins[TEAM_CT]);
   emessage_end();
-}
-
-
-public event_RoundEnd(WinStatus:status, ScenarioEventEndRound:event, Float:tmDelay)
-{
-  // client_print_color(0, 0, "^4[event_RoundEnd]^1 triggered, status: %d", status);
-
-  if (!match[CTF_STARTED])
-  {
-    return HC_CONTINUE;
-  }
-
-  if (match[CTF_KNIFEROUND] && status != WINSTATUS_NONE)
-  {
-    match[CTF_KNIFEROUND_WINNER] = TeamName:status;
-
-    match_kniferound_end();
-  }
-  
-  return HC_CONTINUE;
-}
-
-
-public match_kniferound_end()
-{
-  new alives[TeamName] = {0, 0, 0, 0};
-
-  if (match[CTF_KNIFEROUND_WINNER])
-  {
-    alives[match[CTF_KNIFEROUND_WINNER]] = 1337;
-  }
-  else
-  {
-    for (new id = 1; id <= MaxClients; ++id)
-    {
-      if (is_user_connected(id) && is_user_alive(id))
-      {
-        new TeamName:team = get_member(id, m_iTeam);
-        ++alives[team];
-      }
-    }
-  }
-
-  set_hudmessage(255, 255, 255, -1.0, 0.29, 1, 6.0, 6.0);
-
-  if (alives[TEAM_TERRORIST] > alives[TEAM_CT])
-  {
-    client_print_color(0, print_team_red, "%s Time ^3Terrorista^1 venceu o round faca!", CHAT_PREFIX)
-    show_hudmessage(0, "Time Terrorista venceu o round faca!", configs[CTF_ROUNDTIME_KNIFE]);
-    match[CTF_KNIFEROUND_WINNER] = TEAM_TERRORIST;
-  }
-  else if (alives[TEAM_TERRORIST] < alives[TEAM_CT])
-  {
-    client_print_color(0, print_team_blue, "%s Time ^3CT^1 venceu o round faca!", CHAT_PREFIX)
-    show_hudmessage(0, "Time CT venceu o round faca!", configs[CTF_ROUNDTIME_KNIFE]);
-    match[CTF_KNIFEROUND_WINNER] = TEAM_TERRORIST;
-  }
-  else
-  {
-    client_print_color(0, print_team_blue, "%s Os times empataram o round faca!", CHAT_PREFIX)
-    show_hudmessage(0, "Os times empataram o round faca!", configs[CTF_ROUNDTIME_KNIFE]);
-
-    match[CTF_KNIFEROUND_WINNER] = (random_num(0, 1)) ? TEAM_TERRORIST : TEAM_CT;
-    if (match[CTF_KNIFEROUND_WINNER] == TEAM_TERRORIST)
-    {
-      client_print_color(0, print_team_red, "%s Por sorteio o vencedor foi: ^3Time Terrorista^3!", CHAT_PREFIX)
-    }
-    else
-    {
-      client_print_color(0, print_team_blue, "%s Por sorteio o vencedor foi: ^3Time CT^3!", CHAT_PREFIX)
-    }
-  }
-
-  match[CTF_KNIFEROUND] = 2;
-  
-  set_cvar_float("mp_freezetime", configs[CTF_FREEZETIME]);
-  set_cvar_string("mp_round_infinite", "bcdefghijk");
-  set_cvar_num("mp_force_respawn", configs_bak[CTF_FORCERESPAWN]);
-
-  set_cvar_num("sv_restart", 1)
-  client_cmd(0, "spk deeoo");
 }
 
 
@@ -793,9 +691,3 @@ public generate_motd()
   client_print(0, print_console, "Fim do jogo: %s", timestr);
   client_print(0, print_console, "^n-----------------^n");
 }
-
-
-// public client_cmd_delayed()
-// {
-
-// }
