@@ -457,8 +457,7 @@ DestroyDispenser( id )
 {
 	if ( is_valid_ent( gUserDispenser[ id ] ) )
 	{
-		// set_pev( gUserDispenser[ id ], pev_flags, pev( gUserDispenser[ id ], pev_flags ) | FL_KILLME );
-		remove_entity( gUserDispenser[ id ] );
+		set_pev( gUserDispenser[ id ], pev_flags, pev( gUserDispenser[ id ], pev_flags ) | FL_KILLME );
 	}
 	bDispenserBuild[ id ] = false;
 	gUserDispenser[ id ] = 0;
@@ -483,8 +482,7 @@ public bacon_TakeDamage( ent, idinflictor, idattacker, Float:damage, damagebits 
 			pev( ent, pev_origin, flOrigin );
 
 			UTIL_BreakModel( flOrigin, gMetalGibs, BREAK_COMPUTER );
-			// set_pev( ent, pev_flags, pev( ent, pev_flags ) | FL_KILLME );
-			remove_entity(ent);
+			set_pev( ent, pev_flags, pev( ent, pev_flags ) | FL_KILLME );
 
 			if( idattacker == iOwner )
 			{
