@@ -10,17 +10,28 @@
 
 new const CHAT_PREFIX[] = "^4[CTF Match]^1";
 
-new const clans[][] =
-  {
-    "All Stars",
-    "Brasil Arms",
-    "ep1c gaming Brasil",
-    "Fúria no Gatilho",
-    "Kingdom",
-    "Recruta",
-    "OSKRAXORA",
-    "Esquadrão Fúria no Gatilho"
-  };
+enum _:Clans
+{
+  AST,
+  BRA,
+  EP1C,
+  FNG,
+  KNG,
+  RCT,
+  OKX,
+  EFNG
+};
+new const clans[Clans][32] =
+{
+  "All Stars",
+  "Brasil Arms",
+  "ep1c gaming Brasil",
+  "Fúria no Gatilho",
+  "Kingdom",
+  "Recruta",
+  "OSKRAXORA",
+  "Esquadrão FNG"
+};
 
 enum _:FlagEvent
 {
@@ -36,27 +47,17 @@ enum _:FlagEvent
 
 enum _:CTFMatchConfig
 {
-  Float:CTF_FREEZETIME,
-  Float:CTF_ROUNDTIME,
+  CTF_FREEZETIME, //float
+  CTF_ROUNDTIME, //float
   CTF_MAXPOINTS,
   CTF_HAS_KNIFEROUND,
-  Float:CTF_ROUNDTIME_KNIFE,
+  CTF_ROUNDTIME_KNIFE, //float
   CTF_FORCERESPAWN,
   CTF_ALLTALK,
+  CTF_KNIFE
 };
-new configs[CTFMatchConfig];
-new configs_bak[CTFMatchConfig];
-
-new const CONFIGS_DEFAULT[CTFMatchConfig] =
-{
-  15.0,
-  15.0,
-  10,
-  0,
-  0.4,
-  5,
-  2,
-};
+new cvars[CTFMatchConfig];
+new config_bak[CTFMatchConfig];
 
 enum _:CTFMatch
 {
@@ -80,7 +81,6 @@ new motd_buffer[1024];
 new msg_TeamScore;
 new msg_ScoreInfo;
 // new msg_CurWeapon; 
-new cvar_knife;
 
 new kills[MAX_PLAYERS + 1];
 new deaths[MAX_PLAYERS + 1];
@@ -95,15 +95,16 @@ public plugin_init()
   register_clcmd("say_team /ctf",     "cmd_test", ADMIN_CVAR);
   register_clcmd("say_team /ctfmenu", "cmd_test", ADMIN_CVAR);
 
-  for (new i = CTF_FREEZETIME; i < sizeof(configs); ++i)
-  {
-    configs[i] = CONFIGS_DEFAULT[i];
-  }
+  cvars[CTF_FREEZETIME]   = create_cvar("ctf_match_freezetime",   "15.0");
+  cvars[CTF_ROUNDTIME]    = create_cvar("ctf_match_roundtime",    "15.0");
+  cvars[CTF_MAXPOINTS]    = create_cvar("ctf_match_maxpoints",    "10");
+  cvars[CTF_FORCERESPAWN] = create_cvar("ctf_match_forcerespawn", "5");
+  cvars[CTF_ALLTALK]      = create_cvar("ctf_match_alltalk",      "2");
+  cvars[CTF_KNIFE]        = create_cvar("ctf_match_knife",        "0");
 
   RegisterHookChain(RG_CSGameRules_OnRoundFreezeEnd, "event_OnRoundFreezeEnd");
   RegisterHookChain(RG_CSGameRules_RestartRound, "event_RestartRound");
 
-  cvar_knife = create_cvar("match_knife", "0");
   register_event("CurWeapon", "event_CurWeapon", "b", "1=1", "2!29"); // todo: unregister hook
   
   msg_ScoreInfo = get_user_msgid("ScoreInfo");
@@ -113,7 +114,7 @@ public plugin_init()
 
 public event_CurWeapon(id)
 {
-  if (is_user_alive(id) && get_pcvar_num(cvar_knife))
+  if (is_user_alive(id) && get_pcvar_num(cvars[CTF_KNIFE]))
   {
       engclient_cmd(id, "weapon_knife");
   }
@@ -138,7 +139,7 @@ public menu_ctf(id)
   menu_additem(menu, match[CTF_STARTED] ? "\rFinalizar partida" : "Iniciar partida");
   menu_additem(menu, "\dConfigurar partida");
   menu_additem(menu, (get_cvar_num("mp_freezetime") == 1337) ? "\rDestravar times" : "Travar times na base");
-  menu_additem(menu, (get_cvar_num("match_knife") == 0) ? "Iniciar Round Faca" : "\rFinalizar Round Faca");
+  menu_additem(menu, (get_pcvar_num(cvars[CTF_KNIFE]) == 0) ? "Iniciar Round Faca" : "\rFinalizar Round Faca");
   menu_additem(menu, "Insta Restart round");
   // formatex(item, charsmax(item), "Complete Reset: %s", onoff[complete_reset]);
   // menu_additem(menu, item);
@@ -201,11 +202,11 @@ public menu_ctf_handler(id, menu, item)
     }
     case 3:
     {
-      if (get_cvar_num("match_knife") == 0)
+      if (get_pcvar_num(cvars[CTF_KNIFE]) == 0)
       {
-        set_cvar_num("mp_freezetime", 15);
+        set_cvar_float("mp_freezetime", get_pcvar_float(cvars[CTF_FREEZETIME]));
         set_cvar_num("mp_forcerespawn", 0);
-        set_cvar_num("match_knife", 1);
+        set_pcvar_num(cvars[CTF_KNIFE], 1);
         set_cvar_num("dispenser_enabled", 0);
         set_cvar_string("mp_round_infinite", "bcdeghijk");
         set_cvar_num("amx_knife_rr", 0);
@@ -225,8 +226,8 @@ public menu_ctf_handler(id, menu, item)
       else
       {
         set_cvar_num("mp_freezetime", 1337);
-        set_cvar_num("mp_forcerespawn", 5);
-        set_cvar_num("match_knife", 0);
+        set_cvar_num("mp_forcerespawn", get_pcvar_num(cvars[CTF_FORCERESPAWN]));
+        set_pcvar_num(cvars[CTF_KNIFE], 0);
         set_cvar_num("dispenser_enabled", 1);
         set_cvar_string("mp_round_infinite", "bcdefghijk");
         set_cvar_num("amx_knife_rr", 1);
@@ -242,20 +243,12 @@ public menu_ctf_handler(id, menu, item)
     }
     case 4:
     {
-      // set_member_game(m_bCompleteReset, true);
-      // rg_restart_round();
-      // elog_message("World triggered ^"Round_End^"^n");
-
       server_cmd("sv_restart 1");
       client_cmd(0, "spk deeoo");
-
-      // client_print(0, print_center, "Restarting...");
     }
-    // case 5:
-    // {
-    //   new bool:complete_reset = get_member_game(m_bCompleteReset);
-    //   set_member_game(m_bCompleteReset, !complete_reset);
-    // }
+    case 5:
+    {
+    }
     case 6:
     {
       rg_swap_all_players();
@@ -295,7 +288,7 @@ public jctf_flag(event, id, flagteam, bool:is_assist)
     return;
   }
 
-  new max = (match[CTF_IS_2NDHALF] ? configs[CTF_MAXPOINTS] * 2 : configs[CTF_MAXPOINTS]);
+  new max = (match[CTF_IS_2NDHALF] ? get_pcvar_num(cvars[CTF_MAXPOINTS]) * 2 : get_pcvar_num(cvars[CTF_MAXPOINTS]));
 
   new points;
   new t;
@@ -374,7 +367,7 @@ public event_countdown(ent)
     if (match[CTF_IS_1STHALF])
     {
       
-      new startmoney = get_cvar_num("mp_startmoney");
+      // new startmoney = get_cvar_num("mp_startmoney");
 
       for (new id = 1; id <= MaxClients; ++id)
       {
@@ -389,11 +382,9 @@ public event_countdown(ent)
           kills[id]  = floatround(get_entvar(id, var_frags));
           deaths[id] = get_member(id, m_iDeaths);
         
-          // user_silentkill(id);
-          set_user_adrenaline(id, 0);
-          rg_add_account(id, startmoney, AS_SET);
+          // set_user_adrenaline(id, 0);
+          // rg_add_account(id, startmoney, AS_SET);
         }
-        // client_cmd(id, "say /destroy"); // ... for when you gaze long into the abyss. The abyss gazes also into you.
       }
 
       rg_swap_all_players();
@@ -408,9 +399,6 @@ public event_countdown(ent)
       set_hudmessage(255, 255, 255, -1.0, 0.29, 1, 6.0, 6.0);
       show_hudmessage(0, "TROCA DE LADO, VALENDO!");
 
-      // set_member_game(m_bCompleteReset, true);
-      // rg_restart_round();
-      // elog_message("World triggered ^"Round_End^"^n");
       server_cmd("sv_restart 1");
 
       match[CTF_IS_1STHALF] = 0;
@@ -443,13 +431,13 @@ public proper_swap_config()
   new count_b = 0;
   new ent = MaxClients + 1;
 
-  while ((ent = rg_find_ent_by_class(ent, "NiceDispenser:D")))
-  {
-    if (is_entity(ent))
-    {
-      set_entvar(ent, var_flags, get_entvar(ent, var_flags) | FL_KILLME);
-    }
-  }
+  // while ((ent = rg_find_ent_by_class(ent, "NiceDispenser:D")))
+  // {
+  //   if (is_entity(ent))
+  //   {
+  //     set_entvar(ent, var_flags, get_entvar(ent, var_flags) | FL_KILLME);
+  //   }
+  // }
   ent = MaxClients + 1;
   while ((ent = rg_find_ent_by_class(ent, "placedmodel")))
   {
@@ -482,9 +470,13 @@ public proper_swap_config()
       set_entvar(placedmodels_b[i], var_skin, a);
     }
   }
+
   set_cvar_num("ctf_team_a", b);
   set_cvar_num("ctf_team_b", a);
   server_cmd("ctf_update");
+
+  // set_cvar_num("mp_freezetime", get_pcvar_float(cvars[CTF_FREEZETIME]));
+  // set_cvar_num("mp_roundtime", get_pcvar_float(cvars[CTF_FREEZETIME]));
 }
 public event_RestartRound(id)
 {
@@ -497,9 +489,9 @@ public event_RestartRound(id)
 
   if (match[CTF_KNIFEROUND] == 2)
   {
-    set_cvar_float("mp_roundtime", configs[CTF_ROUNDTIME]);
+    set_cvar_float("mp_roundtime", get_pcvar_float(cvars[CTF_ROUNDTIME]));
     set_cvar_string("mp_round_infinite", "bcdefghijk"); // Can end by team death;
-    set_cvar_num("mp_force_respawn", configs_bak[CTF_FORCERESPAWN]);
+    set_cvar_num("mp_force_respawn", config_bak[CTF_FORCERESPAWN]);
 
     match[CTF_KNIFEROUND] = 0;
     match[CTF_IS_1STHALF] = 1;
@@ -507,7 +499,6 @@ public event_RestartRound(id)
   else if (match[CTF_IS_2NDHALF])
   {
     set_task(1.0, "task_updatescores_delayed");
-    // task_updatescores_delayed();
   }
   return HC_CONTINUE;
 }
@@ -539,10 +530,7 @@ public task_updatescores_delayed()
       write_short(0);
       write_short(_:team);
       message_end();
-
-      // client_print(0, print_chat, "[event_RestartRound] id: %d, kills: %d, deaths: %d", id, kills[id], deaths[id]);
     }
-    // client_cmd(id, "say /destroy"); // ... for when you gaze long into the abyss. The abyss gazes also into you.
   }
 
   emessage_begin(MSG_BROADCAST, msg_TeamScore);
@@ -559,36 +547,36 @@ public task_updatescores_delayed()
 
 public match_start()
 {
-  configs_bak[CTF_FREEZETIME]   = get_cvar_float("mp_freezetime");
-  configs_bak[CTF_ROUNDTIME]    = get_cvar_float("mp_roundtime");
-  configs_bak[CTF_FORCERESPAWN] = get_cvar_num("mp_forcerespawn");
-  configs_bak[CTF_ALLTALK] = get_cvar_num("sv_alltalk");
+  config_bak[CTF_FREEZETIME]   = get_cvar_num("mp_freezetime");
+  config_bak[CTF_ROUNDTIME]    = get_cvar_num("mp_roundtime");
+  config_bak[CTF_FORCERESPAWN] = get_cvar_num("mp_forcerespawn");
+  config_bak[CTF_ALLTALK]      = get_cvar_num("sv_alltalk");
 
-  set_cvar_float("mp_freezetime", configs[CTF_FREEZETIME]);
-  set_cvar_num("sv_alltalk", configs[CTF_ALLTALK]);
+  set_cvar_float("mp_freezetime", get_pcvar_float(cvars[CTF_FREEZETIME]));
+  set_cvar_num("sv_alltalk", get_pcvar_num(cvars[CTF_ALLTALK]));
   set_cvar_num("amx_knife_rr", 1);
 
   match[CTF_STARTED]    = true;
-  match[CTF_KNIFEROUND]   = configs[CTF_HAS_KNIFEROUND];
+  // match[CTF_KNIFEROUND] = get_pcvar_num(cvars[CTF_HAS_KNIFEROUND]);
   match[CTF_KNIFEROUND_WINNER] = TEAM_UNASSIGNED;
   match[CTF_IS_1STHALF] = false;
   match[CTF_IS_2NDHALF] = false;
 
   if (match[CTF_KNIFEROUND])
   {
-    set_cvar_float("mp_roundtime",  configs[CTF_ROUNDTIME_KNIFE]);
+    set_cvar_float("mp_roundtime",  get_pcvar_float(cvars[CTF_ROUNDTIME_KNIFE]));
 
     set_hudmessage(255, 255, 255, -1.0, 0.29, 1, 6.0, 6.0);
-    show_hudmessage(0, "ROUND FACA! SEM RESPAWN! %f", configs[CTF_ROUNDTIME_KNIFE]);
+    show_hudmessage(0, "ROUND FACA! SEM RESPAWN!");
 
     set_cvar_string("mp_round_infinite", "bcdeghijk"); // Can end by team death;
     set_cvar_num("mp_forcerespawn", 0);
   }
   else
   {
-    set_cvar_float("mp_roundtime",  configs[CTF_ROUNDTIME]);
+    set_cvar_float("mp_roundtime",  get_pcvar_float(cvars[CTF_ROUNDTIME]));
     set_cvar_string("mp_round_infinite", "bcdefghijk");
-    set_cvar_num("mp_force_respawn", 5);
+    set_cvar_num("mp_force_respawn", get_pcvar_num(cvars[CTF_FORCERESPAWN]));
 
     match[CTF_IS_1STHALF] = true;
   }
@@ -619,9 +607,9 @@ public match_end()
   client_cmd(0, "spk deeoo");
   // set_cvar_num("sv_restart", 1)
   
-  set_cvar_float("mp_freezetime", configs_bak[CTF_FREEZETIME]);
-  set_cvar_float("mp_roundtime",  configs_bak[CTF_ROUNDTIME]);
-  set_cvar_num("sv_alltalk", configs_bak[CTF_ALLTALK]);
+  set_cvar_float("mp_freezetime", float(config_bak[CTF_FREEZETIME]));
+  set_cvar_float("mp_roundtime",  float(config_bak[CTF_ROUNDTIME]));
+  set_cvar_num("sv_alltalk",      config_bak[CTF_ALLTALK]);
 
   emessage_begin(MSG_ALL, SVC_INTERMISSION);
   emessage_end();
