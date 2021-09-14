@@ -791,8 +791,7 @@ stock UTIL_DestroyDispensers( )
 			new iOwner = pev( iEnt, pev_iuser2 );
 
 			bDispenserBuild[ iOwner ] = false;
-			// set_pev( iEnt, pev_flags, pev( iEnt, pev_flags ) | FL_KILLME );
-			remove_entity(iEnt);
+			set_pev( iEnt, pev_flags, pev( iEnt, pev_flags ) | FL_KILLME );
 		}
 	}
 }
