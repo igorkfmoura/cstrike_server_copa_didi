@@ -765,7 +765,7 @@ public plugin_precache()
     for(new szSound[64], i = 0; i < sizeof g_szSounds; i++)
     {
         for(new t = 1; t <= 2; t++)
-            formatex(szSound, charsmax(szSound), "sound/ctf/%s.mp3", g_szSounds[i][t]), precache_generic(szSound);
+            formatex(szSound, charsmax(szSound), "sound/copadidi/%s.mp3", g_szSounds[i][t]), precache_generic(szSound);
     }
 
 #if FEATURE_C4 == true
@@ -3056,7 +3056,7 @@ public admin_cmd_setScore(id, level, cid)
     get_user_authid(id, szSteam, charsmax(szSteam))
 
     log_amx("Admin %s<%s><%s> set %s's score to %d", szName, szSteam, g_szTeamName[get_user_team(id)], g_szTeamName[iTeam], iScore);
-    client_print_color(0, id, "%s Admin ^3%s^1 set ^4%s^1's score to ^4%d^1", PREFIX, szName, g_szTeamName[get_user_team(id)], iScore);
+    client_print_color(0, id, "%s Admin ^3%s^1 set ^4%s^1's score to ^4%d^1", PREFIX, szName, g_szTeamName[iTeam], iScore);
 
     set_member_game((iTeam == TEAM_BLUE) ? m_iNumCTWins : m_iNumTerroristWins, iScore);
 
@@ -4809,7 +4809,7 @@ game_announce(iEvent, iFlagTeam, szName[])
         // Sounds
         if(szSounds[i])
         {
-            if(get_pcvar_num(pCvar_ctf_sound[iEvent])) client_cmd(i, "mp3 play ^"sound/ctf/%s.mp3^"", g_szSounds[iEvent][iFlagTeam])
+            if(get_pcvar_num(pCvar_ctf_sound[iEvent])) client_cmd(i, "mp3 play ^"sound/copadidi/%s.mp3^"", g_szSounds[iEvent][iFlagTeam])
         }
     }
 }
