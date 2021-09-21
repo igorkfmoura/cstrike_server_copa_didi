@@ -67,9 +67,7 @@ enum _:CTFMatch
   CTF_IS_1STHALF,
   CTF_IS_2NDHALF,
   CTF_TEAM_A_POINTS,
-  CTF_TEAM_A_ID,
   CTF_TEAM_B_POINTS,
-  CTF_TEAM_B_ID,
 };
 new match[CTFMatch];
 
@@ -288,20 +286,21 @@ public jctf_flag(event, id, flagteam, bool:is_assist)
     return;
   }
 
-  new max = (match[CTF_IS_2NDHALF] ? get_pcvar_num(cvars[CTF_MAXPOINTS]) * 2 : get_pcvar_num(cvars[CTF_MAXPOINTS]));
-
+  new max = get_pcvar_num(cvars[CTF_MAXPOINTS]);
   new points;
   new t;
 
   if (flagteam == _:TEAM_CT)
   {
     points = get_member_game(m_iNumTerroristWins) + 1;
-    t = get_cvar_num("ctf_team_a");
+    max += wins[TEAM_TERRORIST];
+    t = get_cvar_num("ctf_team_b");
   }
   else
   {
     points = get_member_game(m_iNumCTWins) + 1;
-    t = get_cvar_num("ctf_team_b");
+    max += wins[TEAM_CT];
+    t = get_cvar_num("ctf_team_a");
   }
   
   if (points >= max)
@@ -367,7 +366,7 @@ public event_countdown(ent)
     if (match[CTF_IS_1STHALF])
     {
       
-      // new startmoney = get_cvar_num("mp_startmoney");
+      new startmoney = get_cvar_num("mp_startmoney");
 
       for (new id = 1; id <= MaxClients; ++id)
       {
@@ -382,8 +381,8 @@ public event_countdown(ent)
           kills[id]  = floatround(get_entvar(id, var_frags));
           deaths[id] = get_member(id, m_iDeaths);
         
-          // set_user_adrenaline(id, 0);
-          // rg_add_account(id, startmoney, AS_SET);
+          set_user_adrenaline(id, 0);
+          rg_add_account(id, startmoney, AS_SET);
         }
       }
 
@@ -562,6 +561,9 @@ public match_start()
   match[CTF_IS_1STHALF] = false;
   match[CTF_IS_2NDHALF] = false;
 
+  wins[TEAM_TERRORIST] = 0;
+  wins[TEAM_CT] = 0;
+
   if (match[CTF_KNIFEROUND])
   {
     set_cvar_float("mp_roundtime",  get_pcvar_float(cvars[CTF_ROUNDTIME_KNIFE]));
@@ -624,8 +626,9 @@ public generate_motd()
   wins[TEAM_TERRORIST] = get_member_game(m_iNumTerroristWins);
   wins[TEAM_CT]        = get_member_game(m_iNumCTWins);
   
-  new a = get_cvar_num("ctf_team_a");
-  new b = get_cvar_num("ctf_team_b");
+  // invertido mesmo, no camp a bandeira do time adversário é a "sua"
+  new b = get_cvar_num("ctf_team_a");
+  new a = get_cvar_num("ctf_team_b");
 
   format(motd_buffer, charsmax(motd_buffer), "[%s] %d x %d [%s]<br>", clans[a], wins[TEAM_TERRORIST], wins[TEAM_CT], clans[b]);
 
