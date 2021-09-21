@@ -138,9 +138,9 @@ public client_authorized(id)
   nick_formated[id][0] = '^0';
   get_user_authid(id, user_auth, charsmax(user_auth));
   get_user_info(id, info_name, user_name, charsmax(user_name));
-  get_user_ip(id, user_ip, charsmax(user_ip));
+  // get_user_ip(id, user_ip, charsmax(user_ip));
 
-  log_amx("'%s' <%s> (%s) entered the server.", user_name, user_auth, user_ip);
+  // log_amx("'%s' <%s> (%s) entered the server.", user_name, user_auth, user_ip);
 
   new bool:found = false;
   new i, j;
@@ -203,7 +203,7 @@ public event_ClientUserInfoChanged(id)
 
   entity_get_string(id, EV_SZ_netname, name_old, charsmax(name_old));
   get_user_info(id, info_name, name_new, charsmax(name_new)) 
-    
+
   // server_print("ClientUserInfoChanged: name_old: %s, name_new: %s", name_old, name_new);
   
   if (nick_formated[id][0])

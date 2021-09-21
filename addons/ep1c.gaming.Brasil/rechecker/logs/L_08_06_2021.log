@@ -1,0 +1,4 @@
+L 06/08/2021 - 22:48:51: Log file started (file "/L_08_06_2021.log") (version "2.5")
+L 06/08/2021 - 22:48:51:   -> file: (../opengl32.dll), exphash: (0), got: (56f2c73c), typeFind: (hash_any), prevhash: (9e45ec67), (#558)(prazer, Aztromix), prevfile: (../msvcr100.dll), findathash: (null), md5hex: (3cc7f256), ex: (0)
+L 06/08/2021 - 22:48:51:   -> file: (../core.dll), exphash: (0), got: (3c197cac), typeFind: (missing), prevhash: (3c197cac), (#558)(prazer, Aztromix), prevfile: (sprites/gas_puff_01.spr), findathash: (sprites/gas_puff_01.spr), md5hex: (ac7c193c), ex: (0)
+L 06/08/2021 - 22:48:51:   -> ExecuteCMD: (fb_ban 10080 #558 "[RC] opengl32";		rc_log opengl32			| md5hash "3cc7f256" - file "../opengl32.dll" - "<VALVE_2:1:1862097058><187.87.125.232>" - prazer, Aztromix), for (#558)(prazer, Aztromix)

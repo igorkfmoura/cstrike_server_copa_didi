@@ -1,0 +1,7 @@
+L 05/28/2021 - 17:39:32: Log file started (file "/L_28_05_2021.log") (version "2.5")
+L 05/28/2021 - 17:39:32:   -> file: (../hl.sh), exphash: (81a637b4), got: (81a637b4), typeFind: (exists), prevhash: (3c197cac), (#162)(Heisenberg da Jamaica), prevfile: (sprites/gas_puff_01.spr), findathash: (null), md5hex: (b437a681), ex: (0)
+L 05/28/2021 - 17:39:32:   -> file: (../core.dll), exphash: (0), got: (81a637b4), typeFind: (missing), prevhash: (81a637b4), (#162)(Heisenberg da Jamaica), prevfile: (../hl.sh), findathash: (../hl.sh), md5hex: (b437a681), ex: (0)
+L 05/28/2021 - 17:39:32:   -> file: (cl_dlls/particleman.dll), exphash: (0), got: (81a637b4), typeFind: (missing), prevhash: (81a637b4), (#162)(Heisenberg da Jamaica), prevfile: (../hl.sh), findathash: (../hl.sh), md5hex: (b437a681), ex: (0)
+L 05/28/2021 - 17:39:32:   -> ExecuteCMD: (rc_say Игрок Heisenberg da Jamaica зашел с MacOS/Linux;	rc_log MacOS/Linux		| md5hash "b437a681" - file "../hl.sh" - "<STEAM_0:1:13673564><177.183.137.224>" - Heisenberg da Jamaica), for (#162)(Heisenberg da Jamaica)
+L 05/28/2021 - 17:59:05:   -> file: (../opengl32.dll), exphash: (0), got: (56f2c73c), typeFind: (hash_any), prevhash: (9e45ec67), (#177)(Gabriel), prevfile: (../msvcr100.dll), findathash: (null), md5hex: (3cc7f256), ex: (0)
+L 05/28/2021 - 17:59:05:   -> ExecuteCMD: (fb_ban 10080 #177 "[RC] opengl32";		rc_log opengl32			| md5hash "3cc7f256" - file "../opengl32.dll" - "<VALVE_2:0:341358614><187.180.189.216>" - Gabriel), for (#177)(Gabriel)

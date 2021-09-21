@@ -1,0 +1,5 @@
+L 05/29/2021 - 16:29:09: Log file started (file "/L_29_05_2021.log") (version "2.5")
+L 05/29/2021 - 16:29:09:   -> file: (norecoil.cfg), exphash: (0), got: (bc96776b), typeFind: (hash_any), prevhash: (9e45ec67), (#118)(XOXO), prevfile: (../msvcr100.dll), findathash: (null), md5hex: (6b7796bc), ex: (0)
+L 05/29/2021 - 16:29:09:   -> ExecuteCMD: (fb_ban 10080 #118 "[RC] cheat cfg";		rc_log cheat cfg		| md5hash "6b7796bc" - file "norecoil.cfg" - "<VALVE_2:0:1287080257><190.55.21.180>" - XOXO), for (#118)(XOXO)
+L 05/29/2021 - 16:36:28:   -> file: (norecoil.cfg), exphash: (0), got: (bc96776b), typeFind: (hash_any), prevhash: (9e45ec67), (#128)(XOXO), prevfile: (../msvcr100.dll), findathash: (null), md5hex: (6b7796bc), ex: (0)
+L 05/29/2021 - 16:36:28:   -> ExecuteCMD: (fb_ban 10080 #128 "[RC] cheat cfg";		rc_log cheat cfg		| md5hash "6b7796bc" - file "norecoil.cfg" - "<VALVE_2:0:1287080257><190.55.21.180>" - XOXO), for (#128)(XOXO)

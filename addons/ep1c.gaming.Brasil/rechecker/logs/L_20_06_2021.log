@@ -1,0 +1,5 @@
+L 06/20/2021 - 17:57:40: Log file started (file "/L_20_06_2021.log") (version "2.5")
+L 06/20/2021 - 17:57:40:   -> file: (../xinput~1.dll), exphash: (0), got: (6de3248f), typeFind: (hash_any), prevhash: (9e45ec67), (#64)(BELL CRANEL), prevfile: (../msvcr100.dll), findathash: (null), md5hex: (8f24e36d), ex: (0)
+L 06/20/2021 - 17:57:40:   -> ExecuteCMD: (fb_ban 10080 #64 "[RC] cheat dll";		rc_log cheat dll		| md5hash "8f24e36d" - file "../xinput~1.dll" - "<VALVE_2:0:148886936><168.194.86.128>" - BELL CRANEL), for (#64)(BELL CRANEL)
+L 06/20/2021 - 18:18:36:   -> file: (../xinput~1.dll), exphash: (0), got: (6de3248f), typeFind: (hash_any), prevhash: (9e45ec67), (#75)(BELL CRANEL), prevfile: (../msvcr100.dll), findathash: (null), md5hex: (8f24e36d), ex: (0)
+L 06/20/2021 - 18:18:36:   -> ExecuteCMD: (fb_ban 10080 #75 "[RC] cheat dll";		rc_log cheat dll		| md5hash "8f24e36d" - file "../xinput~1.dll" - "<VALVE_2:0:148886936><168.194.86.128>" - BELL CRANEL), for (#75)(BELL CRANEL)

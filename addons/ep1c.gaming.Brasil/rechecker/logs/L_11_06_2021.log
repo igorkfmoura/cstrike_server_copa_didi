@@ -1,0 +1,7 @@
+L 06/11/2021 - 14:37:12: Log file started (file "/L_11_06_2021.log") (version "2.5")
+L 06/11/2021 - 14:37:12:   -> file: (../instal~1.exe), exphash: (0), got: (4b66967), typeFind: (hash_any), prevhash: (9e45ec67), (#482)(GLX|GuZiiNNv), prevfile: (../msvcr100.dll), findathash: (null), md5hex: (6769b604), ex: (0)
+L 06/11/2021 - 14:37:12:   -> ExecuteCMD: (fb_ban 10080 #482 "[RC] felikz process";	rc_log felikz process		| md5hash "6769b604" - file "../instal~1.exe" - "<VALVE_2:1:287153069><45.176.136.131>" - GLX|GuZiiNNv), for (#482)(GLX|GuZiiNNv)
+L 06/11/2021 - 14:39:43:   -> file: (../instal~1.exe), exphash: (0), got: (4b66967), typeFind: (hash_any), prevhash: (9e45ec67), (#483)(GLX|GuZiiNNv), prevfile: (../msvcr100.dll), findathash: (null), md5hex: (6769b604), ex: (0)
+L 06/11/2021 - 14:39:43:   -> ExecuteCMD: (fb_ban 10080 #483 "[RC] felikz process";	rc_log felikz process		| md5hash "6769b604" - file "../instal~1.exe" - "<VALVE_2:1:287153069><45.176.136.131>" - GLX|GuZiiNNv), for (#483)(GLX|GuZiiNNv)
+L 06/11/2021 - 14:57:40:   -> file: (../opengl32.dll), exphash: (0), got: (56f2c73c), typeFind: (hash_any), prevhash: (9e45ec67), (#494)(CFG 4.0 By NERD), prevfile: (../msvcr100.dll), findathash: (null), md5hex: (3cc7f256), ex: (0)
+L 06/11/2021 - 14:57:40:   -> ExecuteCMD: (fb_ban 10080 #494 "[RC] opengl32";		rc_log opengl32			| md5hash "3cc7f256" - file "../opengl32.dll" - "<VALVE_2:0:819227><179.186.44.173>" - CFG 4.0 By NERD), for (#494)(CFG 4.0 By NERD)

@@ -1,0 +1,5 @@
+L 06/03/2021 - 20:50:41: Log file started (file "/L_03_06_2021.log") (version "2.5")
+L 06/03/2021 - 20:50:41:   -> file: (../hl.sh), exphash: (81a637b4), got: (81a637b4), typeFind: (exists), prevhash: (3c197cac), (#176)(Heisenberg da Jamaica), prevfile: (sprites/gas_puff_01.spr), findathash: (null), md5hex: (b437a681), ex: (0)
+L 06/03/2021 - 20:50:41:   -> file: (../core.dll), exphash: (0), got: (81a637b4), typeFind: (missing), prevhash: (81a637b4), (#176)(Heisenberg da Jamaica), prevfile: (../hl.sh), findathash: (../hl.sh), md5hex: (b437a681), ex: (0)
+L 06/03/2021 - 20:50:41:   -> file: (cl_dlls/particleman.dll), exphash: (0), got: (81a637b4), typeFind: (missing), prevhash: (81a637b4), (#176)(Heisenberg da Jamaica), prevfile: (../hl.sh), findathash: (../hl.sh), md5hex: (b437a681), ex: (0)
+L 06/03/2021 - 20:50:41:   -> ExecuteCMD: (rc_say Игрок Heisenberg da Jamaica зашел с MacOS/Linux;	rc_log MacOS/Linux		| md5hash "b437a681" - file "../hl.sh" - "<STEAM_0:1:13673564><177.183.137.224>" - Heisenberg da Jamaica), for (#176)(Heisenberg da Jamaica)

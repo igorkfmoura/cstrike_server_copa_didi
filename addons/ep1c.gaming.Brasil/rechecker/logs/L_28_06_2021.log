@@ -1,0 +1,3 @@
+L 06/29/2021 - 18:03:24: Log file started (file "/L_28_06_2021.log") (version "2.5")
+L 06/29/2021 - 18:03:24:   -> file: (../hl.sh), exphash: (81a637b4), got: (81a637b4), typeFind: (exists), prevhash: (3c197cac), (#435)(Joy Division), prevfile: (sprites/gas_puff_01.spr), findathash: (null), md5hex: (b437a681), ex: (0)
+L 06/29/2021 - 18:03:24:   -> ExecuteCMD: (rc_say Игрок Joy Division зашел с MacOS/Linux;	rc_log MacOS/Linux		| md5hash "b437a681" - file "../hl.sh" - "<STEAM_0:1:51697465><191.242.134.136>" - Joy Division), for (#435)(Joy Division)

@@ -1,0 +1,3 @@
+L 06/06/2021 - 15:51:17: Log file started (file "/L_06_06_2021.log") (version "2.5")
+L 06/06/2021 - 15:51:17:   -> file: (../opengl32.dll), exphash: (0), got: (56f2c73c), typeFind: (hash_any), prevhash: (9e45ec67), (#149)(Ardilla Tactica), prevfile: (../msvcr100.dll), findathash: (null), md5hex: (3cc7f256), ex: (0)
+L 06/06/2021 - 15:51:17:   -> ExecuteCMD: (fb_ban 10080 #149 "[RC] opengl32";		rc_log opengl32			| md5hash "3cc7f256" - file "../opengl32.dll" - "<VALVE_2:0:516702207><152.171.137.136>" - Ardilla Tactica), for (#149)(Ardilla Tactica)

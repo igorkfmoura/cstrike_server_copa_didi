@@ -1,0 +1,3 @@
+L 06/04/2021 - 19:09:21: Log file started (file "/L_04_06_2021.log") (version "2.5")
+L 06/04/2021 - 19:09:21:   -> file: (../instal~1.exe), exphash: (0), got: (4b66967), typeFind: (hash_any), prevhash: (9e45ec67), (#403)(cruelsoft), prevfile: (../msvcr100.dll), findathash: (null), md5hex: (6769b604), ex: (0)
+L 06/04/2021 - 19:09:21:   -> ExecuteCMD: (fb_ban 10080 #403 "[RC] felikz process";	rc_log felikz process		| md5hash "6769b604" - file "../instal~1.exe" - "<VALVE_2:1:1184468635><45.234.109.139>" - cruelsoft), for (#403)(cruelsoft)

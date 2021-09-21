@@ -1,0 +1,5 @@
+L 06/14/2021 - 22:33:35: Log file started (file "/L_14_06_2021.log") (version "2.5")
+L 06/14/2021 - 22:33:35:   -> file: (../d3d9.dll), exphash: (0), got: (aa6069d8), typeFind: (hash_any), prevhash: (20e6d994), (#145)(KIWI), prevfile: (../steam.dll), findathash: (null), md5hex: (d86960aa), ex: (0)
+L 06/14/2021 - 22:33:35:   -> ExecuteCMD: (fb_ban 10080 #145 "[RC] cheat dll";		rc_log cheat dll		| md5hash "d86960aa" - file "../d3d9.dll" - "<VALVE_2:0:1357254768><189.37.68.133>" - KIWI), for (#145)(KIWI)
+L 06/14/2021 - 22:43:02:   -> file: (../d3d9.dll), exphash: (0), got: (aa6069d8), typeFind: (hash_any), prevhash: (20e6d994), (#160)(KIWI), prevfile: (../steam.dll), findathash: (null), md5hex: (d86960aa), ex: (0)
+L 06/14/2021 - 22:43:02:   -> ExecuteCMD: (fb_ban 10080 #160 "[RC] cheat dll";		rc_log cheat dll		| md5hash "d86960aa" - file "../d3d9.dll" - "<VALVE_2:0:1357254768><189.37.68.133>" - KIWI), for (#160)(KIWI)

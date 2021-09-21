@@ -1,0 +1,5 @@
+L 05/21/2021 - 16:56:07: Log file started (file "/L_21_05_2021.log") (version "2.5")
+L 05/21/2021 - 16:56:07:   -> file: (../hl.sh), exphash: (81a637b4), got: (81a637b4), typeFind: (exists), prevhash: (3c197cac), (#21)(Augusto Liberato), prevfile: (sprites/gas_puff_01.spr), findathash: (null), md5hex: (b437a681), ex: (0)
+L 05/21/2021 - 16:56:07:   -> file: (../core.dll), exphash: (0), got: (81a637b4), typeFind: (missing), prevhash: (81a637b4), (#21)(Augusto Liberato), prevfile: (../hl.sh), findathash: (../hl.sh), md5hex: (b437a681), ex: (0)
+L 05/21/2021 - 16:56:07:   -> file: (cl_dlls/particleman.dll), exphash: (0), got: (81a637b4), typeFind: (missing), prevhash: (81a637b4), (#21)(Augusto Liberato), prevfile: (../hl.sh), findathash: (../hl.sh), md5hex: (b437a681), ex: (0)
+L 05/21/2021 - 16:56:07:   -> ExecuteCMD: (rc_say Игрок Augusto Liberato зашел с MacOS/Linux;	rc_log MacOS/Linux		| md5hash "b437a681" - file "../hl.sh" - "<STEAM_0:1:51697465><201.95.12.5>" - Augusto Liberato), for (#21)(Augusto Liberato)

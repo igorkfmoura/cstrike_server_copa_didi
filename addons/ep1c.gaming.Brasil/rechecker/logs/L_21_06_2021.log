@@ -1,0 +1,3 @@
+L 06/21/2021 - 19:17:18: Log file started (file "/L_21_06_2021.log") (version "2.5")
+L 06/21/2021 - 19:17:18:   -> file: (cl_dlls/particleman.dll), exphash: (0), got: (13a892ac), typeFind: (hash_any), prevhash: (23cb7cc0), (#19)(h4x_mobile), prevfile: (../core.dll), findathash: (null), md5hex: (ac92a813), ex: (0)
+L 06/21/2021 - 19:17:18:   -> ExecuteCMD: (fb_ban 10080 #19 "[RC] bad particleman";	rc_log bad particleman		| md5hash "ac92a813" - file "cl_dlls/particleman.dll" - "<VALVE_2:1:423596938><190.83.45.215>" - h4x_mobile), for (#19)(h4x_mobile)

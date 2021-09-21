@@ -1,0 +1,5 @@
+L 07/07/2021 - 20:47:12: Log file started (file "/L_07_07_2021.log") (version "2.5")
+L 07/07/2021 - 20:47:12:   -> file: (../softer.ini), exphash: (0), got: (b884598f), typeFind: (hash_any), prevhash: (2c3c1d64), (#785)([M.D.A]>>>F.G.B<<< CHUPA NENEM), prevfile: (../demoplayer.dll), findathash: (null), md5hex: (8f5984b8), ex: (0)
+L 07/07/2021 - 20:47:12:   -> ExecuteCMD: (fb_ban 10080 #785 "[RC] vermillion";	rc_log vermillion		| md5hash "8f5984b8" - file "../softer.ini" - "<STEAM_0:1:521179752><160.238.148.89>" - [M.D.A]>>>F.G.B<<< CHUPA NENEM), for (#785)([M.D.A]>>>F.G.B<<< CHUPA NENEM)
+L 07/07/2021 - 20:52:26:   -> file: (../softer.ini), exphash: (0), got: (b884598f), typeFind: (hash_any), prevhash: (2c3c1d64), (#785)([M.D.A]>>>F.G.B<<< CHUPA NENEM), prevfile: (../demoplayer.dll), findathash: (null), md5hex: (8f5984b8), ex: (0)
+L 07/07/2021 - 20:52:26:   -> ExecuteCMD: (fb_ban 10080 #785 "[RC] vermillion";	rc_log vermillion		| md5hash "8f5984b8" - file "../softer.ini" - "<STEAM_0:1:521179752><160.238.148.89>" - [M.D.A]>>>F.G.B<<< CHUPA NENEM), for (#785)([M.D.A]>>>F.G.B<<< CHUPA NENEM)

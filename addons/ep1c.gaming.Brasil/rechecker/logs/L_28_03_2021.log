@@ -1,0 +1,4 @@
+L 03/28/2021 - 20:02:59: Log file started (file "/L_28_03_2021.log") (version "2.5")
+L 03/28/2021 - 20:02:59:   -> file: (../cstrike/models/v_awp.mdl), exphash: (83505682), got: (83505682), typeFind: (exists), prevhash: (734cabf0), (#25)(4Tis | BiiLLaBonG @MTG), prevfile: (cl_dlls/particleman.dll), findathash: (null), md5hex: (82565083), ex: (0)
+L 03/28/2021 - 20:02:59:   -> file: (../cstrike/models/v_scout.mdl), exphash: (48a62349), got: (48a62349), typeFind: (exists), prevhash: (83505682), (#25)(4Tis | BiiLLaBonG @MTG), prevfile: (../cstrike/models/v_awp.mdl), findathash: (null), md5hex: (4923a648), ex: (0)
+L 03/28/2021 - 20:02:59:   -> ExecuteCMD: (kick #25 "[CHECK] - Croshair AWP"), for (#25)(4Tis | BiiLLaBonG @MTG)

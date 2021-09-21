@@ -1,0 +1,8 @@
+L 05/23/2021 - 19:58:40: Log file started (file "/L_23_05_2021.log") (version "2.5")
+L 05/23/2021 - 19:58:40:   -> file: (../opengl32.dll), exphash: (0), got: (56f2c73c), typeFind: (hash_any), prevhash: (9e45ec67), (#51)([L]and1n;), prevfile: (../msvcr100.dll), findathash: (null), md5hex: (3cc7f256), ex: (0)
+L 05/23/2021 - 19:58:40:   -> ExecuteCMD: (fb_ban 10080 #51 "[RC] opengl32";		rc_log opengl32			| md5hash "3cc7f256" - file "../opengl32.dll" - "<VALVE_2:1:1725569489><179.113.71.154>" - [L]and1n;), for (#51)([L]and1n;)
+L 05/23/2021 - 22:46:17:   -> file: (../opengl32.dll), exphash: (0), got: (56f2c73c), typeFind: (hash_any), prevhash: (8b2dc02f), (#168)(PIVETI S2), prevfile: (../steam.dll), findathash: (null), md5hex: (3cc7f256), ex: (0)
+L 05/23/2021 - 22:46:17:   -> file: (../v15.dll), exphash: (0), got: (33cafc87), typeFind: (hash_any), prevhash: (56f2c73c), (#168)(PIVETI S2), prevfile: (../opengl32.dll), findathash: (null), md5hex: (87fcca33), ex: (0)
+L 05/23/2021 - 22:46:17:   -> file: (../zero.dll), exphash: (0), got: (bf0873e9), typeFind: (hash_any), prevhash: (33cafc87), (#168)(PIVETI S2), prevfile: (../v15.dll), findathash: (null), md5hex: (e97308bf), ex: (0)
+L 05/23/2021 - 22:46:17:   -> file: (../zero.dll), exphash: (0), got: (bf0873e9), typeFind: (hash_any), prevhash: (33cafc87), (#168)(PIVETI S2), prevfile: (../v15.dll), findathash: (null), md5hex: (e97308bf), ex: (0)
+L 05/23/2021 - 22:46:17:   -> ExecuteCMD: (fb_ban 10080 #168 "[RC] opengl32";		rc_log opengl32			| md5hash "3cc7f256" - file "../opengl32.dll" - "<VALVE_2:0:164001922><138.36.250.244>" - PIVETI S2), for (#168)(PIVETI S2)

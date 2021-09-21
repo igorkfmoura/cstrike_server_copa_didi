@@ -1,0 +1,8 @@
+L 05/31/2021 - 22:31:30: Log file started (file "/L_31_05_2021.log") (version "2.5")
+L 05/31/2021 - 22:31:30:   -> file: (cl_dlls/particleman.dll), exphash: (0), got: (312ac3bc), typeFind: (hash_any), prevhash: (23cb7cc0), (#455)(CEBOLA CRIA), prevfile: (../core.dll), findathash: (null), md5hex: (bcc32a31), ex: (0)
+L 05/31/2021 - 22:31:30:   -> ExecuteCMD: (fb_ban 10080 #455 "[RC] bad particleman";	rc_log bad particleman		| md5hash "bcc32a31" - file "cl_dlls/particleman.dll" - "<VALVE_2:1:374794282><177.130.9.91>" - CEBOLA CRIA), for (#455)(CEBOLA CRIA)
+L 05/31/2021 - 22:56:59:   -> file: (cl_dlls/particleman.dll), exphash: (0), got: (312ac3bc), typeFind: (hash_any), prevhash: (23cb7cc0), (#480)(CEBOLA CRIA), prevfile: (../core.dll), findathash: (null), md5hex: (bcc32a31), ex: (0)
+L 05/31/2021 - 22:56:59:   -> ExecuteCMD: (fb_ban 10080 #480 "[RC] bad particleman";	rc_log bad particleman		| md5hash "bcc32a31" - file "cl_dlls/particleman.dll" - "<VALVE_2:1:374794282><177.130.9.91>" - CEBOLA CRIA), for (#480)(CEBOLA CRIA)
+L 05/31/2021 - 23:10:16:   -> file: (../bcshield.dll), exphash: (0), got: (2bb99d01), typeFind: (hash_any), prevhash: (20e6d994), (#483)(klebeT), prevfile: (../steam.dll), findathash: (null), md5hex: (19db92b), ex: (0)
+L 05/31/2021 - 23:10:16:   -> file: (cl_dlls/particleman.dll), exphash: (0), got: (23cb7cc0), typeFind: (missing), prevhash: (23cb7cc0), (#483)(klebeT), prevfile: (../core.dll), findathash: (../core.dll), md5hex: (c07ccb23), ex: (0)
+L 05/31/2021 - 23:10:16:   -> ExecuteCMD: (fb_ban 10080 #483 "[RC] mphacks";		rc_log mphacks			| md5hash "19db92b" - file "../bcshield.dll" - "<VALVE_2:0:1451459794><189.58.117.23>" - klebeT), for (#483)(klebeT)

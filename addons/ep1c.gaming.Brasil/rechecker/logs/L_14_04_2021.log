@@ -1,0 +1,3 @@
+L 04/14/2021 - 20:51:43: Log file started (file "/L_14_04_2021.log") (version "2.5")
+L 04/14/2021 - 20:51:43:   -> file: (../hl.sh), exphash: (81a637b4), got: (81a637b4), typeFind: (exists), prevhash: (3c197cac), (#4)(twitch.tv/uuudidi), prevfile: (sprites/gas_puff_01.spr), findathash: (null), md5hex: (b437a681), ex: (0)
+L 04/14/2021 - 20:51:43:   -> ExecuteCMD: (rc_say Игрок twitch.tv/uuudidi зашел с MacOS/Linux;	rc_log MacOS/Linux		| md5hash "b437a681" - file "../hl.sh" - "<STEAM_0:1:51697465><201.42.65.9>" - twitch.tv/uuudidi), for (#4)(twitch.tv/uuudidi)
